@@ -976,7 +976,7 @@ class Attachment < ActiveRecord::Base
           group(:context_id, :context_type).
           having("MAX(updated_at)<?", quiet_period).
           limit(500).
-          pluck("COUNT(attachments.id), MIN(attachments.id), MAX(updated_at), context_id, context_type")
+          pluck(Arel.sql("COUNT(attachments.id), MIN(attachments.id), MAX(updated_at), context_id, context_type"))
       break if file_batches.empty?
       file_batches.each do |count, attachment_id, last_updated_at, context_id, context_type|
         # clear the need_notify flag for this batch
@@ -989,11 +989,11 @@ class Attachment < ActiveRecord::Base
         # now generate the notification
         record = Attachment.find(attachment_id)
         next if record.context.is_a?(Course) && (!record.context.available? || record.context.concluded?)
-        if record.context.is_a?(Course) && (record.folder.locked? || record.context.tab_hidden?(Course::TAB_FILES))
+        if record.context.is_a?(Course) && (record.folder.locked? || record.locked? || record.context.tab_hidden?(Course::TAB_FILES))
           # only notify course students if they are able to access it
           to_list = record.context.participating_admins - [record.user]
         elsif record.context.respond_to?(:participants)
-          to_list = record.context.participants - [record.user]
+          to_list = record.context.participants(by_date: true) - [record.user]
         end
         recipient_keys = (to_list || []).compact.map(&:asset_string)
         next if recipient_keys.empty?
@@ -1333,22 +1333,24 @@ class Attachment < ActiveRecord::Base
   # this will delete the content of the attachment but not delete the attachment
   # object. It will replace the attachment content with a file_removed file.
   def destroy_content_and_replace(deleted_by_user = nil)
-    att = self.root_attachment_id? ? self.root_attachment : self
-    return true if Purgatory.where(attachment_id: att).active.exists?
-    att.send_to_purgatory(deleted_by_user)
-    att.destroy_content
-    att.thumbnail&.destroy
-    new_name = 'file_removed.pdf'
-    file_removed_file = File.open Rails.root.join('public', 'file_removed', new_name)
-    # TODO set the instfs_uuid of the attachment to a single "file removed" file to avoid
-    # upload the same file over and over. This instfs_uuid should be retrieved from the inst-fs services
-    Attachments::Storage.store_for_attachment(att, file_removed_file)
-    att.filename = new_name
-    att.display_name = new_name
-    att.content_type = "application/pdf"
-    CrocodocDocument.where(attachment_id: att.children_and_self.select(:id)).delete_all
-    Canvadoc.where(attachment_id: att.children_and_self.select(:id)).delete_all
-    att.save!
+    self.shard.activate do
+      att = self.root_attachment_id? ? self.root_attachment : self
+      return true if Purgatory.where(attachment_id: att).active.exists?
+      att.send_to_purgatory(deleted_by_user)
+      att.destroy_content
+      att.thumbnail&.destroy
+      new_name = 'file_removed.pdf'
+      file_removed_file = File.open Rails.root.join('public', 'file_removed', new_name)
+      # TODO set the instfs_uuid of the attachment to a single "file removed" file to avoid
+      # upload the same file over and over. This instfs_uuid should be retrieved from the inst-fs services
+      Attachments::Storage.store_for_attachment(att, file_removed_file)
+      att.filename = new_name
+      att.display_name = new_name
+      att.content_type = "application/pdf"
+      CrocodocDocument.where(attachment_id: att.children_and_self.select(:id)).delete_all
+      Canvadoc.where(attachment_id: att.children_and_self.select(:id)).delete_all
+      att.save!
+    end
   end
 
   # this method does not destroy anything. It copies the content to a new s3object
@@ -1418,7 +1420,7 @@ class Attachment < ActiveRecord::Base
       # TODO: once inst-fs has a delete method, call here
       # for now these objects will be orphaned
     elsif Attachment.s3_storage?
-      self.s3object.delete unless ApplicationController.try(:test_cluster?)
+      self.s3object.delete unless ApplicationController.test_cluster?
     else
       FileUtils.rm full_filename
     end
@@ -1687,7 +1689,7 @@ class Attachment < ActiveRecord::Base
   scope :uploadable, -> { where(:workflow_state => 'pending_upload') }
   scope :active, -> { where(:file_state => 'available') }
   scope :by_display_name, -> { order(display_name_order_by_clause('attachments')) }
-  scope :by_position_then_display_name, -> { order("attachments.position, #{display_name_order_by_clause('attachments')}") }
+  scope :by_position_then_display_name, -> { order(:position, display_name_order_by_clause('attachments')) }
   def self.serialization_excludes; [:uuid, :namespace]; end
 
   # returns filename, if it's already unique, or returns a modified version of

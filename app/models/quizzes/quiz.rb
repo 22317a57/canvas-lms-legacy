@@ -323,8 +323,11 @@ class Quizzes::Quiz < ActiveRecord::Base
     end
   end
 
-  def update_cached_due_dates?
-    due_at_changed? || workflow_state_changed? || only_visible_to_overrides_changed?
+  def update_cached_due_dates?(next_quiz_type = nil)
+    due_at_changed? ||
+      workflow_state_changed? ||
+      only_visible_to_overrides_changed? ||
+      (assignment.nil? && next_quiz_type == 'assignment')
   end
 
   def assignment?
@@ -1094,24 +1097,24 @@ class Quizzes::Quiz < ActiveRecord::Base
     from("(WITH overrides AS (
           SELECT DISTINCT ON (o.quiz_id, o.user_id) *
           FROM (
-            SELECT ao.quiz_id, aos.user_id, ao.due_at, ao.due_at_overridden, 1 AS priority, ao.id AS override_id
+            SELECT ao.quiz_id, aos.user_id, ao.due_at, ao.due_at_overridden, 1 AS priority
             FROM #{AssignmentOverride.quoted_table_name} ao
             INNER JOIN #{AssignmentOverrideStudent.quoted_table_name} aos ON ao.id = aos.assignment_override_id AND ao.set_type = 'ADHOC'
             WHERE aos.user_id = #{User.connection.quote(user)}
               AND ao.workflow_state = 'active'
               AND aos.workflow_state <> 'deleted'
             UNION
-            SELECT ao.quiz_id, e.user_id, ao.due_at, ao.due_at_overridden, 1 AS priority, ao.id AS override_id
+            SELECT ao.quiz_id, e.user_id, ao.due_at, ao.due_at_overridden, 1 AS priority
             FROM #{AssignmentOverride.quoted_table_name} ao
             INNER JOIN #{Enrollment.quoted_table_name} e ON e.course_section_id = ao.set_id AND ao.set_type = 'CourseSection'
             WHERE e.user_id = #{User.connection.quote(user)}
-              AND e.workflow_state NOT IN ('rejected', 'deleted')
+              AND e.workflow_state NOT IN ('rejected', 'deleted', 'inactive')
               AND ao.workflow_state = 'active'
             UNION
-            SELECT q.id, e.user_id, q.due_at, FALSE as due_at_overridden, 2 AS priority, NULL as override_id
+            SELECT q.id, e.user_id, q.due_at, FALSE as due_at_overridden, 2 AS priority
             FROM #{Quizzes::Quiz.quoted_table_name} q
             INNER JOIN #{Enrollment.quoted_table_name} e ON e.course_id = q.context_id
-            WHERE e.workflow_state NOT IN ('rejected', 'deleted')
+            WHERE e.workflow_state NOT IN ('rejected', 'deleted', 'inactive')
               AND e.type in ('StudentEnrollment', 'StudentViewEnrollment')
               AND e.user_id = #{User.connection.quote(user)}
               AND q.assignment_id IS NULL
@@ -1417,6 +1420,10 @@ class Quizzes::Quiz < ActiveRecord::Base
     filters
   end
 
+  def anonymize_students?
+    assignment.present? && assignment.anonymize_students?
+  end
+
   def self.class_names
     %w(Quiz Quizzes::Quiz)
   end
@@ -1433,4 +1440,8 @@ class Quizzes::Quiz < ActiveRecord::Base
   def run_if_overrides_changed_later!
     self.send_later_if_production_enqueue_args(:run_if_overrides_changed!, {:singleton => "quiz_overrides_changed_#{self.global_id}"})
   end
+
+  # This alias exists to handle cases where a method that expects an
+  # Assignment is instead passed a quiz (e.g., Submission#submission_zip).
+  alias_attribute :anonymous_grading?, :anonymous_submissions
 end

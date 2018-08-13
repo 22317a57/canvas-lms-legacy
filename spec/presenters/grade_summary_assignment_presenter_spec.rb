@@ -167,7 +167,6 @@ describe GradeSummaryAssignmentPresenter do
 
   describe "#show_submission_details_link?" do
     before :each do
-      @assignment.root_account.enable_feature!(:anonymous_moderated_marking)
       @submission_stub = double()
       allow(@submission_stub).to receive(:originality_reports_for_display)
     end
@@ -189,6 +188,11 @@ describe GradeSummaryAssignmentPresenter do
       allow(@submission_stub).to receive(:can_view_details?).and_return(true)
       presenter = GradeSummaryAssignmentPresenter.new(summary, @student, @assignment, @submission_stub)
       expect(presenter.show_submission_details_link?).to be true
+    end
+
+    it "returns false when submission is nil" do
+      presenter = GradeSummaryAssignmentPresenter.new(summary, @student, @assignment, nil)
+      expect(presenter.show_submission_details_link?).to be false
     end
   end
 

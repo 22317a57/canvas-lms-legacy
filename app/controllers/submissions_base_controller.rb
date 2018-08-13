@@ -17,7 +17,9 @@
 #
 
 class SubmissionsBaseController < ApplicationController
+  include GradebookSettingsHelpers
   include Api::V1::Rubric
+  include Api::V1::SubmissionComment
 
   def show
     @visible_rubric_assessments = @submission.visible_rubric_assessments_for(@current_user)
@@ -35,6 +37,7 @@ class SubmissionsBaseController < ApplicationController
         rubric = rubric_association&.rubric
         js_env({
           nonScoringRubrics: @domain_root_account.feature_enabled?(:non_scoring_rubrics),
+          outcome_extra_credit_enabled: @context.feature_enabled?(:outcome_extra_credit),
           rubric: rubric ? rubric_json(rubric, @current_user, session, style: 'full') : nil,
           rubricAssociation: rubric_association_json ? rubric_association_json['rubric_association'] : nil,
           outcome_proficiency: outcome_proficiency
@@ -111,7 +114,7 @@ class SubmissionsBaseController < ApplicationController
       respond_to do |format|
         if @submissions
           @submissions = @submissions.select{|s| s.grants_right?(@current_user, session, :read) }
-          is_final = provisional && params[:submission][:final] && @context.grants_right?(@current_user, :moderate_grades)
+          is_final = provisional && params[:submission][:final] && @assignment.permits_moderation?(@current_user)
           @submissions.each do |s|
             s.limit_comments(@current_user, session) unless @submission.grants_right?(@current_user, session, :submit)
             s.apply_provisional_grade_filter!(s.provisional_grade(@current_user, final: is_final)) if provisional
@@ -121,25 +124,35 @@ class SubmissionsBaseController < ApplicationController
 
           format.html { redirect_to course_assignment_url(@context, @assignment) }
 
+          comments_include = if @assignment.can_view_other_grader_comments?(@current_user)
+            :all_submission_comments
+          elsif admin_in_context
+            :submission_comments
+          else
+            :visible_submission_comments
+          end
+
           json_args = Submission.json_serialization_full_parameters({
             :except => [:quiz_submission,:submission_history],
-            :comments => admin_in_context ? :submission_comments : :visible_submission_comments
+            :comments => comments_include
           }).merge(:permissions => { :user => @current_user, :session => session, :include_permissions => false })
           json_args[:methods] << :provisional_grade_id if provisional
-          format.json do
-            render(
-              json: @submissions.map { |s| s.as_json(json_args) },
-              status: :created,
-              location: course_gradebook_url(@submission.assignment.context)
+
+          submissions_json = @submissions.map do |submission|
+            submission_json = submission.as_json(json_args)
+            submission_json[:submission][:submission_comments] = anonymous_moderated_submission_comments(
+              assignment: @assignment,
+              avatars: service_enabled?(:avatars),
+              submissions: @submissions,
+              submission_comments: submission_json[:submission].delete(comments_include),
+              current_user: @current_user,
+              course: @context
             )
+            submission_json
           end
-          format.text do
-            render(
-              json: @submissions.map { |s| s.as_json(json_args) },
-              status: :created,
-              location: course_gradebook_url(@submission.assignment.context)
-            )
-          end
+
+          format.json { render json: submissions_json, status: :created, location: course_gradebook_url(@submission.assignment.context) }
+          format.text { render json: submissions_json, status: :created, location: course_gradebook_url(@submission.assignment.context) }
         else
           @error_message = t('errors_update_failed', "Update Failed")
           flash[:error] = @error_message

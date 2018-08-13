@@ -17,7 +17,7 @@
  */
 
 import actions from '../actions'
-import {COURSE, ACCOUNT} from '../propTypes'
+import {COURSE, ACCOUNT, ALL_ROLES_LABEL, ALL_ROLES_VALUE} from '../propTypes'
 import {PERMISSIONS, ROLES} from './examples'
 import reducer from '../reducer'
 
@@ -114,6 +114,98 @@ it('UPDATE_ROLE_FILTER filters properly', () => {
   checkDisplayed(newState.roles, [1])
 })
 
+it('UPDATE_SELECTED_ROLES changes the filters in the filter bar', () => {
+  const originalState = {
+    selectedRoles: [{id: '104', label: 'kitty', children: 'kitty', value: '104'}]
+  }
+  const payload = {id: '108', label: 'meow', children: 'meow', value: '108'}
+  const newState = reduce(actions.updateSelectedRoles(payload), originalState)
+
+  const expectedState = {id: '108', label: 'meow', children: 'meow', value: '108'}
+  expect(newState.selectedRoles).toEqual(expectedState)
+})
+
+it('UPDATE_SELECTED_ROLES changes filters if all roles are selected', () => {
+  const originalState = {
+    selectedRoles: [{label: ALL_ROLES_LABEL, value: ALL_ROLES_VALUE}]
+  }
+  const payload = {id: '108', label: 'meow', children: 'meow', value: '108'}
+  const newState = reduce(actions.updateSelectedRoles(payload), originalState)
+
+  const expectedState = {id: '108', label: 'meow', children: 'meow', value: '108'}
+  expect(newState.selectedRoles).toEqual(expectedState)
+})
+
+it('FILTER_NEW_ROLE adds the new role to the filter bar and keeps the old', () => {
+  const originalState = {
+    selectedRoles: [{id: '104', label: 'kitty', children: 'kitty', value: '104'}]
+  }
+  const payload = {id: '108', label: 'meow', children: 'meow', value: '108'}
+  const newState = reduce(actions.filterNewRole(payload), originalState)
+
+  const expectedState = [
+    {id: '104', label: 'kitty', children: 'kitty', value: '104'},
+    {id: '108', label: 'meow', children: 'meow', value: '108'}
+  ]
+  expect(newState.selectedRoles).toEqual(expectedState)
+})
+
+it('FILTER_NEW_ROLE does not change filters if all roles are selected', () => {
+  const originalState = {
+    selectedRoles: [{label: ALL_ROLES_LABEL, value: ALL_ROLES_VALUE}]
+  }
+  const payload = {id: '108', label: 'meow', children: 'meow', value: '108'}
+  const newState = reduce(actions.filterNewRole(payload), originalState)
+
+  const expectedState = [{label: ALL_ROLES_LABEL, value: ALL_ROLES_VALUE}]
+  expect(newState.selectedRoles).toEqual(expectedState)
+})
+
+it('FILTER_DELETED_ROLE removes the given role from the filter bar and keeps the old', () => {
+  const originalState = {
+    selectedRoles: [
+      {id: '104', label: 'kitty', children: 'kitty', value: '104'},
+      {id: '108', label: 'meow', children: 'meow', value: '108'}
+    ]
+  }
+  const payload = {
+    role: {id: '108', label: 'meow', children: 'meow', value: '108'},
+    selectedRoles: [{id: '104', label: 'kitty', children: 'kitty', value: '104'}]
+  }
+  const newState = reduce(actions.filterDeletedRole(payload), originalState)
+
+  const expectedState = [{id: '104', label: 'kitty', children: 'kitty', value: '104'}]
+  expect(newState.selectedRoles).toEqual(expectedState)
+})
+
+it('FILTER_DELETED_ROLE does not change the filters if all roles are selected', () => {
+  const originalState = {
+    selectedRoles: [{label: ALL_ROLES_LABEL, value: ALL_ROLES_VALUE}]
+  }
+  const payload = {
+    role: {id: '108', label: 'meow', children: 'meow', value: '108'},
+    selectedRoles: [{label: ALL_ROLES_LABEL, value: ALL_ROLES_VALUE}]
+  }
+  const newState = reduce(actions.filterDeletedRole(payload), originalState)
+
+  const expectedState = [{label: ALL_ROLES_LABEL, value: ALL_ROLES_VALUE}]
+  expect(newState.selectedRoles).toEqual(expectedState)
+})
+
+it('FILTER_DELETED_ROLE resets to all roles displayed if the last displated role is deleted', () => {
+  const originalState = {
+    selectedRoles: [{id: '108', label: 'meow', children: 'meow', value: '108'}]
+  }
+  const payload = {
+    role: {id: '108', label: 'meow', children: 'meow', value: '108'},
+    selectedRoles: [{id: '108', label: 'meow', children: 'meow', value: '108'}]
+  }
+  const newState = reduce(actions.filterDeletedRole(payload), originalState)
+
+  const expectedState = []
+  expect(newState.selectedRoles).toEqual(expectedState)
+})
+
 it('DISPLAY_ROLE_TRAY sets the activeRoleTray in the store', () => {
   const originalState = {activeRoleTray: null}
   const payload = {role: {name: 'newRoleSim', id: '3'}}
@@ -199,21 +291,70 @@ it('ADD_TRAY_SAVING_FAIL sets the activeAddTray to false in the store', () => {
 
 it('UPDATE_PERMISSIONS sets enabled in the store', () => {
   const originalState = {
-    roles: [{id: '1', permissions: {become_user: {enabled: true, locked: true}}}]
+    roles: [{id: '1', permissions: {become_user: {enabled: true, locked: true, explicit: true}}}]
   }
-  const payload = {courseRoleId: '1', permissionName: 'become_user', enabled: false, locked: true}
+  const payload = {
+    role: {
+      id: '1',
+      permissions: {
+        become_user: {
+          enabled: false,
+          locked: true,
+          explicit: true
+        }
+      }
+    }
+  }
   const newState = reduce(actions.updatePermissions(payload), originalState)
-  const expectedState = [{id: '1', permissions: {become_user: {enabled: false, locked: true}}}]
+  const expectedState = [
+    {id: '1', permissions: {become_user: {enabled: false, locked: true, explicit: true}}}
+  ]
   expect(newState.roles).toEqual(expectedState)
 })
 
 it('UPDATE_PERMISSIONS sets locked in the store', () => {
   const originalState = {
-    roles: [{id: '1', permissions: {become_user: {enabled: true, locked: true}}}]
+    roles: [{id: '1', permissions: {become_user: {enabled: true, locked: true, explicit: true}}}]
   }
-  const payload = {courseRoleId: '1', permissionName: 'become_user', enabled: true, locked: false}
+  const payload = {
+    role: {
+      id: '1',
+      permissions: {
+        become_user: {
+          enabled: true,
+          locked: false,
+          explicit: true
+        }
+      }
+    }
+  }
   const newState = reduce(actions.updatePermissions(payload), originalState)
-  const expectedState = [{id: '1', permissions: {become_user: {enabled: true, locked: false}}}]
+  const expectedState = [
+    {id: '1', permissions: {become_user: {enabled: true, locked: false, explicit: true}}}
+  ]
+  expect(newState.roles).toEqual(expectedState)
+})
+
+it('UPDATE_PERMISSIONS sets explicit in the store', () => {
+  const originalState = {
+    roles: [{id: '1', permissions: {become_user: {enabled: true, locked: true, explicit: true}}}]
+  }
+  const payload = {
+    role: {
+      id: '1',
+      permissions: {
+        become_user: {
+          enabled: true,
+          locked: true,
+          explicit: false
+        }
+      }
+    }
+  }
+  const newState = reduce(actions.updatePermissions(payload), originalState)
+  const expectedState = [
+    {id: '1', permissions: {become_user: {enabled: true, locked: true, explicit: false}}}
+  ]
   expect(newState.roles).toEqual(expectedState)
 })
 
@@ -262,10 +403,10 @@ it('ADD_NEW_ROLE updates the label correct', () => {
         contextType: COURSE
       },
       {
-        base_role_type: 'TeacherEnrollment',
+        base_role_type: 'AccountMembership',
         id: '10',
         label: 'aaron',
-        role: 'TeacherEnrollment',
+        role: 'AccountMembership',
         workflow_state: 'active',
         displayed: false,
         contextType: ACCOUNT
@@ -302,12 +443,77 @@ it('ADD_NEW_ROLE updates the label correct', () => {
       contextType: COURSE
     },
     {
-      base_role_type: 'TeacherEnrollment',
+      base_role_type: 'AccountMembership',
       id: '10',
       label: 'aaron',
-      role: 'TeacherEnrollment',
+      role: 'AccountMembership',
       workflow_state: 'active',
       displayed: false,
+      contextType: ACCOUNT
+    }
+  ]
+  expect(newState.roles).toEqual(expectedState)
+})
+
+it('ADD_NEW_ROLE correctly adds account level role', () => {
+  const originalState = {
+    roles: [
+      {
+        base_role_type: 'StudentEnrollment',
+        id: '9',
+        label: 'steven',
+        role: 'StudentEnrollment',
+        workflow_state: 'active',
+        displayed: false,
+        contextType: COURSE
+      },
+      {
+        base_role_type: 'AccountMembership',
+        id: '10',
+        label: 'aaron',
+        role: 'AccountMembership',
+        workflow_state: 'active',
+        displayed: true,
+        contextType: ACCOUNT
+      }
+    ]
+  }
+  const payload = {
+    base_role_type: 'AccountMembership',
+    id: '11',
+    label: 'venk grumpy',
+    role: 'venk grumpy',
+    workflow_state: 'active',
+    displayed: false,
+    contextType: ACCOUNT
+  }
+  const newState = reduce(actions.addNewRole(payload), originalState)
+  const expectedState = [
+    {
+      base_role_type: 'StudentEnrollment',
+      id: '9',
+      label: 'steven',
+      role: 'StudentEnrollment',
+      workflow_state: 'active',
+      displayed: false,
+      contextType: COURSE
+    },
+    {
+      base_role_type: 'AccountMembership',
+      id: '10',
+      label: 'aaron',
+      role: 'AccountMembership',
+      workflow_state: 'active',
+      displayed: true,
+      contextType: ACCOUNT
+    },
+    {
+      base_role_type: 'AccountMembership',
+      id: '11',
+      label: 'venk grumpy',
+      role: 'venk grumpy',
+      workflow_state: 'active',
+      displayed: true,
       contextType: ACCOUNT
     }
   ]

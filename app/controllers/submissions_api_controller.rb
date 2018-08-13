@@ -235,6 +235,8 @@ class SubmissionsApiController < ApplicationController
         submissions = submissions.order(:user_id)
 
         submissions = submissions.preload(:group) if includes.include?("group")
+        submissions = submissions.preload(:quiz_submission) unless params[:exclude_response_fields]&.include?('preview_url')
+        submissions = submissions.preload(:attachment) unless params[:exclude_response_fields]&.include?('attachments')
 
         submissions = Api.paginate(submissions, self,
                                    polymorphic_url([:api_v1, @section || @context, @assignment, :submissions]))
@@ -465,6 +467,7 @@ class SubmissionsApiController < ApplicationController
       if params[:workflow_state].present?
         submissions_scope = submissions_scope.where(:workflow_state => params[:workflow_state])
       end
+      submissions_scope = submissions_scope.preload(:attachment) unless params[:exclude_response_fields]&.include?('attachments')
       submissions = submissions_scope.preload(:originality_reports, :quiz_submission).to_a
       bulk_load_attachments_and_previews(submissions)
       submissions_for_user = submissions.group_by(&:user_id)
@@ -523,6 +526,7 @@ class SubmissionsApiController < ApplicationController
       submissions = submissions.where("submitted_at>?", submitted_since_date) if submitted_since_date
       submissions = submissions.where("graded_at>?", graded_since_date) if graded_since_date
       submissions = submissions.preload(:user, :originality_reports, :quiz_submission)
+      submissions = submissions.preload(:attachment) unless params[:exclude_response_fields]&.include?('attachments')
 
       # this will speed up pagination for large collections when order_direction is asc
       if order_by == 'graded_at' && order_direction == 'asc'
@@ -596,7 +600,8 @@ class SubmissionsApiController < ApplicationController
       api_attachment_preflight(
         @user, request,
         check_quota: false, # we don't check quota when uploading a file for assignment submission
-        folder: @user.submissions_folder(@context) # organize attachment into the course submissions folder
+        folder: @user.submissions_folder(@context), # organize attachment into the course submissions folder
+        assignment: @assignment
       )
     end
   end
@@ -726,6 +731,13 @@ class SubmissionsApiController < ApplicationController
   #       rubric_assessment[crit1][points]=3&rubric_assessment[crit2][points]=5&rubric_assessment[crit2][comments]=Well%20Done.
   def update
     @assignment = @context.assignments.active.find(params[:assignment_id])
+
+    if params[:submission] && params[:submission][:posted_grade] && !params[:submission][:provisional] &&
+        @assignment.moderated_grading && !@assignment.grades_published?
+      render_unauthorized_action
+      return
+    end
+
     @user = get_user_considering_section(params[:user_id])
 
     @submission = @assignment.all_submissions.find_or_create_by!(user: @user)
@@ -748,7 +760,7 @@ class SubmissionsApiController < ApplicationController
           submission[:seconds_late_override] = params[:submission].delete(:seconds_late_override)
         end
         submission[:provisional] = value_to_boolean(params[:submission][:provisional])
-        submission[:final] = value_to_boolean(params[:submission][:final]) && @context.grants_right?(@current_user, :moderate_grades)
+        submission[:final] = value_to_boolean(params[:submission][:final]) && @assignment.permits_moderation?(@current_user)
         if params[:submission][:submission_type] == 'basic_lti_launch' && (!@submission.has_submission? || @submission.submission_type == 'basic_lti_launch')
           submission[:submission_type] = params[:submission][:submission_type]
           submission[:url] = params[:submission][:url]
@@ -860,7 +872,11 @@ class SubmissionsApiController < ApplicationController
     if authorized_action(@context, @current_user, [:manage_grades, :view_all_grades])
       @assignment = @context.assignments.active.find(params[:assignment_id])
       includes = Array(params[:include])
-      can_view_student_names = @assignment.can_view_student_names?(@current_user)
+
+      # When mobile supports new anonymous we can remove the allow_new flag
+      allow_new_anonymous_id = value_to_boolean(params[:allow_new_anonymous_id])
+      can_view_student_names = allow_new_anonymous_id ? @assignment.can_view_student_names?(@current_user) : true
+
       student_scope = context.students_visible_to(@current_user, include: :inactive)
       submission_scope = @assignment.submissions.except(:preload).where(user_id: student_scope).
         order(can_view_student_names ? :user_id : :anonymous_id)

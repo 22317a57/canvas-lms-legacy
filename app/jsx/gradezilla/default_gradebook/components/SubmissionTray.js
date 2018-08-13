@@ -65,13 +65,13 @@ export default class SubmissionTray extends React.Component {
   };
 
   static propTypes = {
-    anonymousModeratedMarkingEnabled: bool.isRequired,
     assignment: shape({
       name: string.isRequired,
       htmlUrl: string.isRequired,
       muted: bool.isRequired,
       published: bool.isRequired,
-      anonymousGrading: bool.isRequired
+      anonymizeStudents: bool.isRequired,
+      moderatedGrading: bool.isRequired,
     }).isRequired,
     contentRef: func,
     currentUserId: string.isRequired,
@@ -170,6 +170,11 @@ export default class SubmissionTray extends React.Component {
   }
 
   renderSubmissionComments () {
+    const {anonymizeStudents, moderatedGrading, muted} = this.props.assignment;
+    if (anonymizeStudents || (moderatedGrading && muted)) {
+      return;
+    }
+
     if (this.props.submissionCommentsLoaded) {
       return (
         <div>
@@ -199,7 +204,7 @@ export default class SubmissionTray extends React.Component {
 
   renderSpeedGraderLink (speedGraderProps) {
     const buttonProps = { variant: 'link', href: speedGraderProps.speedGraderUrl }
-    if (this.props.anonymousModeratedMarkingEnabled && speedGraderProps.anonymousGrading) {
+    if (speedGraderProps.anonymizeStudents) {
       buttonProps.onClick = (e) => {
         e.preventDefault();
         this.props.onAnonymousSpeedGraderClick(speedGraderProps.speedGraderUrl);
@@ -219,7 +224,7 @@ export default class SubmissionTray extends React.Component {
     const { name, avatarUrl } = this.props.student;
     const assignmentParam = `assignment_id=${this.props.submission.assignmentId}`;
     const studentParam = `#{"student_id":"${this.props.student.id}"}`;
-    const speedGraderUrlParams = this.props.anonymousModeratedMarkingEnabled && this.props.assignment.anonymousGrading
+    const speedGraderUrlParams = this.props.assignment.anonymizeStudents
       ? assignmentParam
       : `${assignmentParam}${studentParam}`
     const speedGraderUrl = encodeURI(`/courses/${this.props.courseId}/gradebook/speed_grader?${speedGraderUrlParams}`)
@@ -245,7 +250,7 @@ export default class SubmissionTray extends React.Component {
     let speedGraderProps = null;
     if (this.props.speedGraderEnabled) {
       speedGraderProps = {
-        anonymousGrading: this.props.assignment.anonymousGrading,
+        anonymizeStudents: this.props.assignment.anonymizeStudents,
         speedGraderUrl
       };
     }

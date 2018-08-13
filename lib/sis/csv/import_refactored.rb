@@ -145,7 +145,7 @@ module SIS
           while faster_csv.shift
             if create_importers && rows % @rows_for_parallel == 0
               @parallel_importers[importer] ||= []
-              @parallel_importers[importer] << create_parallel_importer(csv, importer, rows)
+              @parallel_importers[importer] << create_parallel_importer(csv, importer, rows).id
             end
             rows += 1
           end
@@ -176,10 +176,17 @@ module SIS
           @batch.data[:supplied_batches] << importer if @csvs[importer].present?
           @batch.data[:counts][importer.to_s.pluralize.to_sym] = 0
         end
+        @run_immediately = @total_rows <= Setting.get('sis_batch_parallelism_count_threshold', '50').to_i
+        @batch.data[:running_immediately] = @run_immediately
+
         @batch.data[:completed_importers] = []
         @batch.save!
 
-        queue_next_importer_set
+        if @run_immediately
+          run_all_importers
+        else
+          queue_next_importer_set
+        end
       rescue => e
         fail_with_error!(e)
       ensure
@@ -202,7 +209,8 @@ module SIS
         SisBatch.where(:id => @batch).where("progress IS NULL or progress < ?", current_progress).update_all(progress: current_progress)
       end
 
-      def run_parallel_importer(parallel_importer)
+      def run_parallel_importer(id)
+        parallel_importer = id.is_a?(ParallelImporter) ? id : ParallelImporter.find(id)
         if @batch.workflow_state == 'aborted'
           parallel_importer.abort
           return
@@ -225,8 +233,10 @@ module SIS
         fail_with_error!(e)
       ensure
         file&.close
-        if is_last_parallel_importer_of_type?(parallel_importer)
-          queue_next_importer_set unless %w{aborted failed failed_with_messages}.include?(@batch.workflow_state)
+        unless @run_immediately
+          if is_last_parallel_importer_of_type?(parallel_importer)
+            queue_next_importer_set unless %w{aborted failed failed_with_messages}.include?(@batch.workflow_state)
+          end
         end
       end
 
@@ -241,13 +251,30 @@ module SIS
         })[:error_report]
         error_message = I18n.t("Error while importing CSV. Please contact support. "\
                                  "(Error report %{number})", number: err_id.to_s)
-        SisBatch.add_error(nil, error_message, sis_batch: @batch, failure: true, backtrace: e.backtrace)
-        @batch.workflow_state = :failed_with_messages
-        @batch.finish(false)
-        @batch.save!
+        @batch.shard.activate do
+          SisBatch.add_error(nil, error_message, sis_batch: @batch, failure: true, backtrace: e.try(:backtrace))
+          @batch.workflow_state = :failed_with_messages
+          @batch.finish(false)
+          @batch.save!
+        end
       end
 
       private
+
+      def run_all_importers
+        IMPORTERS.each do |importer_type|
+          importers = @parallel_importers[importer_type]
+          next unless importers
+          importers.each do |pi|
+            run_parallel_importer(pi)
+            return false if %w{aborted failed failed_with_messages}.include?(@batch.workflow_state)
+          end
+        end
+        @batch.parallel_importers.group(:importer_type).sum(:rows_processed).each do |type, count|
+          @batch.data[:counts][type.pluralize.to_sym] = count
+        end
+        finish
+      end
 
       def queue_next_importer_set
         next_importer_type = IMPORTERS.detect{|i| !@batch.data[:completed_importers].include?(i) && @parallel_importers[i].present?}

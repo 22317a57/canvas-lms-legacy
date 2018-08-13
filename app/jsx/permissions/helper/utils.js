@@ -47,8 +47,10 @@ function roleComparisonFunction(roleOne, roleTwo) {
 }
 
 export function roleIsBaseRole(role) {
-  // TODO wonder if there is a better way to see if this is the case, or if there
-  //      are any situations where this isn't actually the case
+  return roleIsCourseBaseRole(role) || role.role === 'AccountAdmin'
+}
+
+export function roleIsCourseBaseRole(role) {
   return role.role === role.base_role_type
 }
 
@@ -86,11 +88,16 @@ export function roleSortedInsert(roles, roleToInsert) {
 /*
  * Sorts an array of roles based on role type
  */
-export const getSortedRoles = roles => {
+export function getSortedRoles(roles, accountAdmin) {
   const nonBaseRoles = roles.filter(role => !roleIsBaseRole(role))
   let orderedRoles = roles.filter(roleIsBaseRole) // Grabs all the base roles for the start
   nonBaseRoles.forEach(roleToBePlaced => {
     orderedRoles = roleSortedInsert(orderedRoles, roleToBePlaced)
   })
+  // Make sure Account Admin is always the first-displayed role
+  if (typeof accountAdmin !== 'undefined') {
+    orderedRoles.splice(orderedRoles.indexOf(accountAdmin), 1)
+    orderedRoles.unshift(accountAdmin)
+  }
   return orderedRoles
 }

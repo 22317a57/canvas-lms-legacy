@@ -1,5 +1,256 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`does not render end time if the same as start time 1`] = `
+<div
+  className="planner-item"
+>
+  <div>
+    <ApplyTheme
+      immutable={false}
+      theme={Object {}}
+    >
+      <Checkbox
+        checked={false}
+        disabled={false}
+        indeterminate={false}
+        inline={false}
+        label={
+          <ScreenReaderContent
+            as="span"
+          >
+            Calendar Event This Assignment is about awesome stuff is not marked as done.
+          </ScreenReaderContent>
+        }
+        onChange={[Function]}
+        size="medium"
+        variant="simple"
+      />
+    </ApplyTheme>
+  </div>
+  <div
+    aria-hidden="true"
+    style={
+      Object {
+        "color": "#d71f85",
+      }
+    }
+  >
+    <IconCalendarMonth />
+  </div>
+  <div>
+    <div>
+      <div
+        className=""
+      >
+        <div>
+          <Text
+            as="span"
+            color="secondary"
+            letterSpacing="normal"
+            size="x-small"
+          >
+            A Course about being Diffrient Calendar Event
+          </Text>
+        </div>
+        <div
+          style={
+            Object {
+              "position": "relative",
+            }
+          }
+        >
+          <Link
+            as="button"
+            ellipsis={true}
+            href="#"
+            iconPlacement="start"
+            linkRef={[Function]}
+            variant="default"
+          >
+            <ScreenReaderContent
+              as="span"
+            >
+              Calendar Event This Assignment is about awesome stuff, at Saturday, December 17, 2011 3:30 AM.
+            </ScreenReaderContent>
+            <PresentationContent
+              as="span"
+            >
+              <Text
+                as="span"
+                color="primary"
+                letterSpacing="normal"
+                size="medium"
+              >
+                This Assignment is about awesome stuff
+              </Text>
+            </PresentationContent>
+          </Link>
+        </div>
+      </div>
+      <div
+        className=""
+      >
+        <div />
+        <div
+          className=""
+        >
+          <div>
+            <Text
+              as="span"
+              color="secondary"
+              letterSpacing="normal"
+              size="x-small"
+            >
+              <PresentationContent
+                as="span"
+              >
+                3:30 AM
+              </PresentationContent>
+            </Text>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`prefers to render feedback if it and the location are available 1`] = `
+<div
+  className="planner-item"
+>
+  <div>
+    <ApplyTheme
+      immutable={false}
+      theme={Object {}}
+    >
+      <Checkbox
+        checked={false}
+        disabled={false}
+        indeterminate={false}
+        inline={false}
+        label={
+          <ScreenReaderContent
+            as="span"
+          >
+            Assignment This Assignment is about awesome stuff is not marked as done.
+          </ScreenReaderContent>
+        }
+        onChange={[Function]}
+        size="medium"
+        variant="simple"
+      />
+    </ApplyTheme>
+  </div>
+  <div
+    aria-hidden="true"
+    style={
+      Object {
+        "color": "#d71f85",
+      }
+    }
+  >
+    <IconAssignment />
+  </div>
+  <div>
+    <div>
+      <div
+        className=""
+      >
+        <div>
+          <Text
+            as="span"
+            color="secondary"
+            letterSpacing="normal"
+            size="x-small"
+          >
+            A Course about being Diffrient Assignment
+          </Text>
+        </div>
+        <div
+          style={
+            Object {
+              "position": "relative",
+            }
+          }
+        >
+          <Link
+            as="button"
+            ellipsis={true}
+            href="#"
+            iconPlacement="start"
+            linkRef={[Function]}
+            variant="default"
+          >
+            <ScreenReaderContent
+              as="span"
+            >
+              Assignment This Assignment is about awesome stuff, due Saturday, December 17, 2011 3:30 AM.
+            </ScreenReaderContent>
+            <PresentationContent
+              as="span"
+            >
+              <Text
+                as="span"
+                color="primary"
+                letterSpacing="normal"
+                size="medium"
+              >
+                This Assignment is about awesome stuff
+              </Text>
+            </PresentationContent>
+          </Link>
+        </div>
+      </div>
+      <div
+        className=""
+      >
+        <div />
+        <div
+          className=""
+        >
+          <div>
+            <Text
+              as="span"
+              color="secondary"
+              letterSpacing="normal"
+              size="x-small"
+            >
+              <PresentationContent
+                as="span"
+              >
+                Due: 3:30 AM
+              </PresentationContent>
+            </Text>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <span>
+        <Avatar
+          inline={true}
+          name="Dr. David Bowman"
+          size="small"
+          src="/avatar/is/here/"
+          variant="circle"
+        />
+      </span>
+      <span>
+        <Text
+          as="span"
+          fontStyle="italic"
+          letterSpacing="normal"
+          size="medium"
+        >
+          Open the pod bay doors, HAL.
+        </Text>
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
 exports[`renders Announcement correctly with everything 1`] = `
 <div
   className="planner-item"
@@ -12,6 +263,7 @@ exports[`renders Announcement correctly with everything 1`] = `
       <Checkbox
         checked={true}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -38,7 +290,9 @@ exports[`renders Announcement correctly with everything 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -58,15 +312,16 @@ exports[`renders Announcement correctly with everything 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
             <ScreenReaderContent
               as="span"
             >
-              Announcement I am an Announcement, at Saturday, December 17, 2011 3:30 AM.
+              Announcement I am an Announcement posted Saturday, December 17, 2011 3:30 AM.
             </ScreenReaderContent>
             <PresentationContent
               as="span"
@@ -83,9 +338,13 @@ exports[`renders Announcement correctly with everything 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -143,6 +402,7 @@ exports[`renders Announcement correctly with just date 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -169,7 +429,9 @@ exports[`renders Announcement correctly with just date 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -189,15 +451,16 @@ exports[`renders Announcement correctly with just date 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
             <ScreenReaderContent
               as="span"
             >
-              Announcement I am an Announcement, at Saturday, December 17, 2011 3:30 AM.
+              Announcement I am an Announcement posted Saturday, December 17, 2011 3:30 AM.
             </ScreenReaderContent>
             <PresentationContent
               as="span"
@@ -214,9 +477,13 @@ exports[`renders Announcement correctly with just date 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -250,6 +517,7 @@ exports[`renders Announcement correctly with just points 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -276,7 +544,9 @@ exports[`renders Announcement correctly with just points 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -296,15 +566,16 @@ exports[`renders Announcement correctly with just points 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
             <ScreenReaderContent
               as="span"
             >
-              Announcement I am an Announcement, at Saturday, December 17, 2011 3:30 AM.
+              Announcement I am an Announcement posted Saturday, December 17, 2011 3:30 AM.
             </ScreenReaderContent>
             <PresentationContent
               as="span"
@@ -321,9 +592,13 @@ exports[`renders Announcement correctly with just points 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -381,6 +656,7 @@ exports[`renders Announcement correctly without right side content 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -407,7 +683,9 @@ exports[`renders Announcement correctly without right side content 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -427,15 +705,16 @@ exports[`renders Announcement correctly without right side content 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
             <ScreenReaderContent
               as="span"
             >
-              Announcement I am an Announcement, at Saturday, December 17, 2011 3:30 AM.
+              Announcement I am an Announcement posted Saturday, December 17, 2011 3:30 AM.
             </ScreenReaderContent>
             <PresentationContent
               as="span"
@@ -452,9 +731,13 @@ exports[`renders Announcement correctly without right side content 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -488,6 +771,7 @@ exports[`renders Assignment correctly with everything 1`] = `
       <Checkbox
         checked={true}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -514,7 +798,9 @@ exports[`renders Assignment correctly with everything 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -534,8 +820,9 @@ exports[`renders Assignment correctly with everything 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="http://www.non_default_url.com"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -559,9 +846,13 @@ exports[`renders Assignment correctly with everything 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -596,7 +887,7 @@ exports[`renders Assignment correctly with everything 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -619,6 +910,7 @@ exports[`renders Assignment correctly with just date 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -645,7 +937,9 @@ exports[`renders Assignment correctly with just date 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -665,8 +959,9 @@ exports[`renders Assignment correctly with just date 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -690,9 +985,13 @@ exports[`renders Assignment correctly with just date 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -703,7 +1002,7 @@ exports[`renders Assignment correctly with just date 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -726,6 +1025,7 @@ exports[`renders Assignment correctly with just points 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -752,7 +1052,9 @@ exports[`renders Assignment correctly with just points 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -772,8 +1074,9 @@ exports[`renders Assignment correctly with just points 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -797,9 +1100,13 @@ exports[`renders Assignment correctly with just points 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -834,7 +1141,7 @@ exports[`renders Assignment correctly with just points 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -857,6 +1164,7 @@ exports[`renders Assignment correctly without right side content 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -883,7 +1191,9 @@ exports[`renders Assignment correctly without right side content 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -903,8 +1213,9 @@ exports[`renders Assignment correctly without right side content 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -928,9 +1239,13 @@ exports[`renders Assignment correctly without right side content 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -941,7 +1256,7 @@ exports[`renders Assignment correctly without right side content 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -964,6 +1279,7 @@ exports[`renders Calendar Event correctly with an all day date 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -990,7 +1306,9 @@ exports[`renders Calendar Event correctly with an all day date 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -1010,15 +1328,16 @@ exports[`renders Calendar Event correctly with an all day date 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
             <ScreenReaderContent
               as="span"
             >
-              Calendar Event I am a Calendar Event, on December 17, 2011.
+              Calendar Event I am a Calendar Event, all day on December 17, 2011.
             </ScreenReaderContent>
             <PresentationContent
               as="span"
@@ -1035,9 +1354,13 @@ exports[`renders Calendar Event correctly with an all day date 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -1071,6 +1394,7 @@ exports[`renders Calendar Event correctly with everything 1`] = `
       <Checkbox
         checked={true}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -1097,7 +1421,9 @@ exports[`renders Calendar Event correctly with everything 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -1117,8 +1443,9 @@ exports[`renders Calendar Event correctly with everything 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -1142,9 +1469,13 @@ exports[`renders Calendar Event correctly with everything 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -1202,6 +1533,7 @@ exports[`renders Calendar Event correctly with just date 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -1228,7 +1560,9 @@ exports[`renders Calendar Event correctly with just date 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -1248,8 +1582,9 @@ exports[`renders Calendar Event correctly with just date 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -1273,9 +1608,13 @@ exports[`renders Calendar Event correctly with just date 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -1287,6 +1626,121 @@ exports[`renders Calendar Event correctly with just date 1`] = `
                 as="span"
               >
                 3:30 AM
+              </PresentationContent>
+            </Text>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`renders Calendar Event correctly with start and end time 1`] = `
+<div
+  className="planner-item"
+>
+  <div>
+    <ApplyTheme
+      immutable={false}
+      theme={Object {}}
+    >
+      <Checkbox
+        checked={false}
+        disabled={false}
+        indeterminate={false}
+        inline={false}
+        label={
+          <ScreenReaderContent
+            as="span"
+          >
+            Calendar Event I am a Calendar Event is not marked as done.
+          </ScreenReaderContent>
+        }
+        onChange={[Function]}
+        size="medium"
+        variant="simple"
+      />
+    </ApplyTheme>
+  </div>
+  <div
+    aria-hidden="true"
+    style={
+      Object {
+        "color": "#d71f85",
+      }
+    }
+  >
+    <IconCalendarMonth />
+  </div>
+  <div>
+    <div>
+      <div
+        className=""
+      >
+        <div>
+          <Text
+            as="span"
+            color="secondary"
+            letterSpacing="normal"
+            size="x-small"
+          >
+            A Course about being Diffrient Calendar Event
+          </Text>
+        </div>
+        <div
+          style={
+            Object {
+              "position": "relative",
+            }
+          }
+        >
+          <Link
+            as="button"
+            ellipsis={true}
+            href="#"
+            iconPlacement="start"
+            linkRef={[Function]}
+            variant="default"
+          >
+            <ScreenReaderContent
+              as="span"
+            >
+              Calendar Event I am a Calendar Event, at Saturday, December 17, 2011 3:30 AM until 5:30 AM
+            </ScreenReaderContent>
+            <PresentationContent
+              as="span"
+            >
+              <Text
+                as="span"
+                color="primary"
+                letterSpacing="normal"
+                size="medium"
+              >
+                I am a Calendar Event
+              </Text>
+            </PresentationContent>
+          </Link>
+        </div>
+      </div>
+      <div
+        className=""
+      >
+        <div />
+        <div
+          className="undefined"
+        >
+          <div>
+            <Text
+              as="span"
+              color="secondary"
+              letterSpacing="normal"
+              size="x-small"
+            >
+              <PresentationContent
+                as="span"
+              >
+                3:30 AM to 5:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -1309,6 +1763,7 @@ exports[`renders Calendar Event correctly without right side content 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -1335,7 +1790,9 @@ exports[`renders Calendar Event correctly without right side content 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -1355,8 +1812,9 @@ exports[`renders Calendar Event correctly without right side content 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -1380,9 +1838,13 @@ exports[`renders Calendar Event correctly without right side content 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -1416,6 +1878,7 @@ exports[`renders Discussion correctly with everything 1`] = `
       <Checkbox
         checked={true}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -1442,7 +1905,9 @@ exports[`renders Discussion correctly with everything 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -1462,8 +1927,9 @@ exports[`renders Discussion correctly with everything 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -1487,9 +1953,13 @@ exports[`renders Discussion correctly with everything 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -1524,7 +1994,7 @@ exports[`renders Discussion correctly with everything 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -1547,6 +2017,7 @@ exports[`renders Discussion correctly with just date 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -1573,7 +2044,9 @@ exports[`renders Discussion correctly with just date 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -1593,8 +2066,9 @@ exports[`renders Discussion correctly with just date 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -1618,9 +2092,13 @@ exports[`renders Discussion correctly with just date 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -1631,7 +2109,7 @@ exports[`renders Discussion correctly with just date 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -1654,6 +2132,7 @@ exports[`renders Discussion correctly with just points 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -1680,7 +2159,9 @@ exports[`renders Discussion correctly with just points 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -1700,8 +2181,9 @@ exports[`renders Discussion correctly with just points 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -1725,9 +2207,13 @@ exports[`renders Discussion correctly with just points 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -1762,7 +2248,7 @@ exports[`renders Discussion correctly with just points 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -1785,6 +2271,7 @@ exports[`renders Discussion correctly without right side content 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -1811,7 +2298,9 @@ exports[`renders Discussion correctly without right side content 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -1831,8 +2320,9 @@ exports[`renders Discussion correctly without right side content 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -1856,9 +2346,13 @@ exports[`renders Discussion correctly without right side content 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -1869,7 +2363,7 @@ exports[`renders Discussion correctly without right side content 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -1892,6 +2386,7 @@ exports[`renders Note correctly with Group 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -1918,7 +2413,9 @@ exports[`renders Note correctly with Group 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -1938,8 +2435,9 @@ exports[`renders Note correctly with Group 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="/groups/9/pages/this-is-an-account-level-group-page"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -1963,9 +2461,13 @@ exports[`renders Note correctly with Group 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -1976,7 +2478,7 @@ exports[`renders Note correctly with Group 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -1999,12 +2501,13 @@ exports[`renders Note correctly with everything 1`] = `
       <Checkbox
         checked={true}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
             as="span"
           >
-            Task I am a Note is marked as done.
+            To Do I am a Note is marked as done.
           </ScreenReaderContent>
         }
         onChange={[Function]}
@@ -2031,7 +2534,9 @@ exports[`renders Note correctly with everything 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -2039,7 +2544,7 @@ exports[`renders Note correctly with everything 1`] = `
             letterSpacing="normal"
             size="x-small"
           >
-            Math 101 TO DO
+            Math 101 To Do
           </Text>
         </div>
         <div
@@ -2051,15 +2556,17 @@ exports[`renders Note correctly with everything 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
+            onClick={[Function]}
             variant="default"
           >
             <ScreenReaderContent
               as="span"
             >
-              Task I am a Note, due Saturday, December 17, 2011 3:30 AM.
+              To Do I am a Note has a to do time at Saturday, December 17, 2011 3:30 AM.
             </ScreenReaderContent>
             <PresentationContent
               as="span"
@@ -2076,9 +2583,37 @@ exports[`renders Note correctly with everything 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
+          <div>
+            <ApplyTheme
+              immutable={false}
+              theme={Object {}}
+            >
+              <Button
+                as="button"
+                buttonRef={[Function]}
+                fluidWidth={false}
+                icon={[Function]}
+                margin="0"
+                onClick={[Function]}
+                size="medium"
+                type="button"
+                variant="icon"
+              >
+                <ScreenReaderContent
+                  as="span"
+                >
+                  Edit
+                </ScreenReaderContent>
+              </Button>
+            </ApplyTheme>
+          </div>
           <div>
             <Text
               as="span"
@@ -2089,7 +2624,7 @@ exports[`renders Note correctly with everything 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                To Do: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -2112,12 +2647,13 @@ exports[`renders Note correctly without Course 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
             as="span"
           >
-            Note I am a Note is not marked as done.
+            To Do I am a Note is not marked as done.
           </ScreenReaderContent>
         }
         onChange={[Function]}
@@ -2144,7 +2680,9 @@ exports[`renders Note correctly without Course 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -2152,7 +2690,7 @@ exports[`renders Note correctly without Course 1`] = `
             letterSpacing="normal"
             size="x-small"
           >
-             Note
+             To Do
           </Text>
         </div>
         <div
@@ -2164,15 +2702,17 @@ exports[`renders Note correctly without Course 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
+            onClick={[Function]}
             variant="default"
           >
             <ScreenReaderContent
               as="span"
             >
-              Note I am a Note, due Saturday, December 17, 2011 3:30 AM.
+              To Do I am a Note has a to do time at Saturday, December 17, 2011 3:30 AM.
             </ScreenReaderContent>
             <PresentationContent
               as="span"
@@ -2189,9 +2729,37 @@ exports[`renders Note correctly without Course 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
+          <div>
+            <ApplyTheme
+              immutable={false}
+              theme={Object {}}
+            >
+              <Button
+                as="button"
+                buttonRef={[Function]}
+                fluidWidth={false}
+                icon={[Function]}
+                margin="0"
+                onClick={[Function]}
+                size="medium"
+                type="button"
+                variant="icon"
+              >
+                <ScreenReaderContent
+                  as="span"
+                >
+                  Edit
+                </ScreenReaderContent>
+              </Button>
+            </ApplyTheme>
+          </div>
           <div>
             <Text
               as="span"
@@ -2202,7 +2770,7 @@ exports[`renders Note correctly without Course 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                To Do: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -2225,6 +2793,7 @@ exports[`renders Page correctly with everything 1`] = `
       <Checkbox
         checked={true}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -2251,7 +2820,9 @@ exports[`renders Page correctly with everything 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -2271,8 +2842,9 @@ exports[`renders Page correctly with everything 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -2296,9 +2868,13 @@ exports[`renders Page correctly with everything 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -2333,7 +2909,7 @@ exports[`renders Page correctly with everything 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -2356,6 +2932,7 @@ exports[`renders Page correctly with just date 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -2382,7 +2959,9 @@ exports[`renders Page correctly with just date 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -2402,8 +2981,9 @@ exports[`renders Page correctly with just date 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -2427,9 +3007,13 @@ exports[`renders Page correctly with just date 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -2440,7 +3024,7 @@ exports[`renders Page correctly with just date 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -2463,6 +3047,7 @@ exports[`renders Page correctly with just points 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -2489,7 +3074,9 @@ exports[`renders Page correctly with just points 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -2509,8 +3096,9 @@ exports[`renders Page correctly with just points 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -2534,9 +3122,13 @@ exports[`renders Page correctly with just points 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -2571,7 +3163,7 @@ exports[`renders Page correctly with just points 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -2594,6 +3186,7 @@ exports[`renders Page correctly without right side content 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -2620,7 +3213,9 @@ exports[`renders Page correctly without right side content 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -2640,8 +3235,9 @@ exports[`renders Page correctly without right side content 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -2665,9 +3261,13 @@ exports[`renders Page correctly without right side content 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -2678,7 +3278,7 @@ exports[`renders Page correctly without right side content 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -2701,6 +3301,7 @@ exports[`renders Quiz correctly with everything 1`] = `
       <Checkbox
         checked={true}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -2727,7 +3328,9 @@ exports[`renders Quiz correctly with everything 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -2747,8 +3350,9 @@ exports[`renders Quiz correctly with everything 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -2772,9 +3376,13 @@ exports[`renders Quiz correctly with everything 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -2809,7 +3417,7 @@ exports[`renders Quiz correctly with everything 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -2832,6 +3440,7 @@ exports[`renders Quiz correctly with just date 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -2858,7 +3467,9 @@ exports[`renders Quiz correctly with just date 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -2878,8 +3489,9 @@ exports[`renders Quiz correctly with just date 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -2903,9 +3515,13 @@ exports[`renders Quiz correctly with just date 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -2916,7 +3532,7 @@ exports[`renders Quiz correctly with just date 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -2939,6 +3555,7 @@ exports[`renders Quiz correctly with just points 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -2965,7 +3582,9 @@ exports[`renders Quiz correctly with just points 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -2985,8 +3604,9 @@ exports[`renders Quiz correctly with just points 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -3010,9 +3630,13 @@ exports[`renders Quiz correctly with just points 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -3047,7 +3671,7 @@ exports[`renders Quiz correctly with just points 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -3070,6 +3694,7 @@ exports[`renders Quiz correctly without right side content 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -3096,7 +3721,9 @@ exports[`renders Quiz correctly without right side content 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -3116,8 +3743,9 @@ exports[`renders Quiz correctly without right side content 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -3141,9 +3769,13 @@ exports[`renders Quiz correctly without right side content 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -3154,7 +3786,7 @@ exports[`renders Quiz correctly without right side content 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -3177,6 +3809,7 @@ exports[`renders correctly 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -3203,7 +3836,9 @@ exports[`renders correctly 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -3223,8 +3858,9 @@ exports[`renders correctly 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -3248,9 +3884,13 @@ exports[`renders correctly 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -3285,7 +3925,7 @@ exports[`renders correctly 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -3308,6 +3948,7 @@ exports[`renders feedback if available 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -3330,11 +3971,13 @@ exports[`renders feedback if available 1`] = `
       }
     }
   >
-    <IconAssignmentLine />
+    <IconAssignment />
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -3354,8 +3997,9 @@ exports[`renders feedback if available 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -3379,9 +4023,13 @@ exports[`renders feedback if available 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -3392,7 +4040,7 @@ exports[`renders feedback if available 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>
@@ -3424,6 +4072,382 @@ exports[`renders feedback if available 1`] = `
 </div>
 `;
 
+exports[`renders media feedback if available 1`] = `
+<div
+  className="planner-item"
+>
+  <div>
+    <ApplyTheme
+      immutable={false}
+      theme={Object {}}
+    >
+      <Checkbox
+        checked={false}
+        disabled={false}
+        indeterminate={false}
+        inline={false}
+        label={
+          <ScreenReaderContent
+            as="span"
+          >
+            Assignment This Assignment is about awesome stuff is not marked as done.
+          </ScreenReaderContent>
+        }
+        onChange={[Function]}
+        size="medium"
+        variant="simple"
+      />
+    </ApplyTheme>
+  </div>
+  <div
+    aria-hidden="true"
+    style={
+      Object {
+        "color": "#d71f85",
+      }
+    }
+  >
+    <IconAssignment />
+  </div>
+  <div>
+    <div>
+      <div
+        className=""
+      >
+        <div>
+          <Text
+            as="span"
+            color="secondary"
+            letterSpacing="normal"
+            size="x-small"
+          >
+            A Course about being Diffrient Assignment
+          </Text>
+        </div>
+        <div
+          style={
+            Object {
+              "position": "relative",
+            }
+          }
+        >
+          <Link
+            as="button"
+            ellipsis={true}
+            href="#"
+            iconPlacement="start"
+            linkRef={[Function]}
+            variant="default"
+          >
+            <ScreenReaderContent
+              as="span"
+            >
+              Assignment This Assignment is about awesome stuff, due Saturday, December 17, 2011 3:30 AM.
+            </ScreenReaderContent>
+            <PresentationContent
+              as="span"
+            >
+              <Text
+                as="span"
+                color="primary"
+                letterSpacing="normal"
+                size="medium"
+              >
+                This Assignment is about awesome stuff
+              </Text>
+            </PresentationContent>
+          </Link>
+        </div>
+      </div>
+      <div
+        className=""
+      >
+        <div />
+        <div
+          className=""
+        >
+          <div>
+            <Text
+              as="span"
+              color="secondary"
+              letterSpacing="normal"
+              size="x-small"
+            >
+              <PresentationContent
+                as="span"
+              >
+                Due: 3:30 AM
+              </PresentationContent>
+            </Text>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <span>
+        <Avatar
+          inline={true}
+          name="Howard Stern"
+          size="small"
+          src="/avatar/is/here/"
+          variant="circle"
+        />
+      </span>
+      <span>
+        <Text
+          as="span"
+          fontStyle="italic"
+          letterSpacing="normal"
+          size="medium"
+        >
+          You have media feedback.
+        </Text>
+      </span>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`renders the end time if available 1`] = `
+<div
+  className="planner-item"
+>
+  <div>
+    <ApplyTheme
+      immutable={false}
+      theme={Object {}}
+    >
+      <Checkbox
+        checked={false}
+        disabled={false}
+        indeterminate={false}
+        inline={false}
+        label={
+          <ScreenReaderContent
+            as="span"
+          >
+            Calendar Event This Assignment is about awesome stuff is not marked as done.
+          </ScreenReaderContent>
+        }
+        onChange={[Function]}
+        size="medium"
+        variant="simple"
+      />
+    </ApplyTheme>
+  </div>
+  <div
+    aria-hidden="true"
+    style={
+      Object {
+        "color": "#d71f85",
+      }
+    }
+  >
+    <IconCalendarMonth />
+  </div>
+  <div>
+    <div>
+      <div
+        className=""
+      >
+        <div>
+          <Text
+            as="span"
+            color="secondary"
+            letterSpacing="normal"
+            size="x-small"
+          >
+            A Course about being Diffrient Calendar Event
+          </Text>
+        </div>
+        <div
+          style={
+            Object {
+              "position": "relative",
+            }
+          }
+        >
+          <Link
+            as="button"
+            ellipsis={true}
+            href="#"
+            iconPlacement="start"
+            linkRef={[Function]}
+            variant="default"
+          >
+            <ScreenReaderContent
+              as="span"
+            >
+              Calendar Event This Assignment is about awesome stuff, at Saturday, December 17, 2011 3:30 AM until 5:30 AM
+            </ScreenReaderContent>
+            <PresentationContent
+              as="span"
+            >
+              <Text
+                as="span"
+                color="primary"
+                letterSpacing="normal"
+                size="medium"
+              >
+                This Assignment is about awesome stuff
+              </Text>
+            </PresentationContent>
+          </Link>
+        </div>
+      </div>
+      <div
+        className=""
+      >
+        <div />
+        <div
+          className="undefined"
+        >
+          <div>
+            <Text
+              as="span"
+              color="secondary"
+              letterSpacing="normal"
+              size="x-small"
+            >
+              <PresentationContent
+                as="span"
+              >
+                3:30 AM to 5:30 AM
+              </PresentationContent>
+            </Text>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`renders the location if available 1`] = `
+<div
+  className="planner-item"
+>
+  <div>
+    <ApplyTheme
+      immutable={false}
+      theme={Object {}}
+    >
+      <Checkbox
+        checked={false}
+        disabled={false}
+        indeterminate={false}
+        inline={false}
+        label={
+          <ScreenReaderContent
+            as="span"
+          >
+            Assignment This Assignment is about awesome stuff is not marked as done.
+          </ScreenReaderContent>
+        }
+        onChange={[Function]}
+        size="medium"
+        variant="simple"
+      />
+    </ApplyTheme>
+  </div>
+  <div
+    aria-hidden="true"
+    style={
+      Object {
+        "color": "#d71f85",
+      }
+    }
+  >
+    <IconAssignment />
+  </div>
+  <div>
+    <div>
+      <div
+        className=""
+      >
+        <div>
+          <Text
+            as="span"
+            color="secondary"
+            letterSpacing="normal"
+            size="x-small"
+          >
+            A Course about being Diffrient Assignment
+          </Text>
+        </div>
+        <div
+          style={
+            Object {
+              "position": "relative",
+            }
+          }
+        >
+          <Link
+            as="button"
+            ellipsis={true}
+            href="#"
+            iconPlacement="start"
+            linkRef={[Function]}
+            variant="default"
+          >
+            <ScreenReaderContent
+              as="span"
+            >
+              Assignment This Assignment is about awesome stuff, due Saturday, December 17, 2011 3:30 AM.
+            </ScreenReaderContent>
+            <PresentationContent
+              as="span"
+            >
+              <Text
+                as="span"
+                color="primary"
+                letterSpacing="normal"
+                size="medium"
+              >
+                This Assignment is about awesome stuff
+              </Text>
+            </PresentationContent>
+          </Link>
+        </div>
+      </div>
+      <div
+        className=""
+      >
+        <div />
+        <div
+          className=""
+        >
+          <div>
+            <Text
+              as="span"
+              color="secondary"
+              letterSpacing="normal"
+              size="x-small"
+            >
+              <PresentationContent
+                as="span"
+              >
+                Due: 3:30 AM
+              </PresentationContent>
+            </Text>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <Text
+        as="span"
+        color="secondary"
+        letterSpacing="normal"
+        size="medium"
+      >
+        Columbus, OH
+      </Text>
+    </div>
+  </div>
+</div>
+`;
+
 exports[`renders user-created Todo correctly 1`] = `
 <div
   className="planner-item"
@@ -3436,6 +4460,7 @@ exports[`renders user-created Todo correctly 1`] = `
       <Checkbox
         checked={false}
         disabled={false}
+        indeterminate={false}
         inline={false}
         label={
           <ScreenReaderContent
@@ -3468,7 +4493,9 @@ exports[`renders user-created Todo correctly 1`] = `
   </div>
   <div>
     <div>
-      <div>
+      <div
+        className=""
+      >
         <div>
           <Text
             as="span"
@@ -3488,8 +4515,9 @@ exports[`renders user-created Todo correctly 1`] = `
         >
           <Link
             as="button"
-            ellipsis={false}
+            ellipsis={true}
             href="#"
+            iconPlacement="start"
             linkRef={[Function]}
             variant="default"
           >
@@ -3513,9 +4541,13 @@ exports[`renders user-created Todo correctly 1`] = `
           </Link>
         </div>
       </div>
-      <div>
+      <div
+        className=""
+      >
         <div />
-        <div>
+        <div
+          className=""
+        >
           <div>
             <Text
               as="span"
@@ -3526,7 +4558,7 @@ exports[`renders user-created Todo correctly 1`] = `
               <PresentationContent
                 as="span"
               >
-                DUE: 3:30 AM
+                Due: 3:30 AM
               </PresentationContent>
             </Text>
           </div>

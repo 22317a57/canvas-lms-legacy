@@ -22,6 +22,7 @@ import { alert } from '../utilities/alertUtils';
 import formatMessage from '../format-message';
 import parseLinkHeader from 'parse-link-header';
 import { makeEndOfDayIfMidnight } from '../utilities/dateUtils';
+import { maybeUpdateTodoSidebar } from './sidebar-actions';
 
 import {
   transformInternalToApiItem,
@@ -68,6 +69,7 @@ export const {
 );
 
 export * from './loading-actions';
+export * from './sidebar-actions';
 
 function saveExistingPlannerItem (apiItem) {
   return axios({
@@ -140,6 +142,9 @@ export const dismissOpportunity = (id, plannerOverride) => {
         return opp.planner_override && !opp.planner_override.dismissed;
       }).length < 10)
         dispatch(getNextOpportunities());
+    })
+    .catch((error) => {
+      alert(formatMessage('An error occurred attempting to dismiss the opportunity.'), true);
     });
     return promise;
   };
@@ -182,6 +187,7 @@ export const deletePlannerItem = (plannerItem) => {
       .catch(() => alert(formatMessage('Failed to delete to do'), true));
     dispatch(clearUpdateTodo());
     dispatch(deletedPlannerItem(promise));
+    dispatch(maybeUpdateTodoSidebar(promise));
     return promise;
   };
 };
@@ -192,8 +198,8 @@ export const cancelEditingPlannerItem = () => {
   return (dispatch, getState) => {
     dispatch(clearUpdateTodo());
     dispatch(canceledEditingPlannerItem());
-  }
-}
+  };
+};
 
 function saveExistingPlannerOverride (apiOverride) {
   return axios({
@@ -233,6 +239,7 @@ export const togglePlannerItemCompletion = (plannerItem) => {
       });
     });
     dispatch(savedPlannerItem(promise));
+    dispatch(maybeUpdateTodoSidebar(promise));
     return promise;
   };
 };

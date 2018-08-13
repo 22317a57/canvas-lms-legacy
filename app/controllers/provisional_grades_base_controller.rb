@@ -33,9 +33,7 @@ class ProvisionalGradesBaseController < ApplicationController
       return render json: { message: "Assignment grades have already been published" }, status: :bad_request
     end
 
-    # in theory we could apply visibility here, but for now we would rather be performant
-    # e.g. @assignment.students_with_visibility(@context.students_visible_to(@current_user)).find(params[:student_id])
-    json = {needs_provisional_grade: @assignment.student_needs_provisional_grade?(@student)}
+    json = {needs_provisional_grade: @assignment.can_be_moderated_grader?(@current_user)}
 
     return render json: json unless submission_updated?
 
@@ -44,7 +42,7 @@ class ProvisionalGradesBaseController < ApplicationController
     submission = @assignment.submissions.where(user_id: @student).first
 
     return render json: json if submission&.updated_at.to_i == last_updated.to_i
-    return render_unauthorized_action unless @context.grants_right?(@current_user, session, :moderate_grades)
+    return render_unauthorized_action unless @assignment.permits_moderation?(@current_user)
 
     selection = @assignment.moderated_grading_selections.where(student_id: @student).first
 

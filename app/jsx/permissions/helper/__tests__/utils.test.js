@@ -16,7 +16,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import {getSortedRoles, roleSortedInsert} from '../utils'
+import {getSortedRoles, roleSortedInsert, roleIsCourseBaseRole, roleIsBaseRole} from '../utils'
 
 it('getSortedRoles sorts roles properly based on base_role_type', () => {
   const UNORDERED_ROLES = [
@@ -284,4 +284,76 @@ it('roleSortedInsert sorts roles properly inserts Role into middle item', () => 
 
   const orderedRoles = roleSortedInsert(ALL_ROLES, ROLE_TO_INSERT)
   expect(orderedRoles).toMatchObject(ORDERED_ROLES)
+})
+
+it('roleSortedInsert puts accountAdmin in the first position', () => {
+  const ACCOUNT_ADMIN = {
+    id: '1',
+    role: 'AccountAdmin',
+    base_role_type: 'AccountMembership'
+  }
+
+  const orderedRoles = getSortedRoles(ALL_ROLES, ACCOUNT_ADMIN)
+  expect(orderedRoles[0]).toMatchObject(ACCOUNT_ADMIN)
+})
+
+it('roleSortedInsert removes account admin and replaces it in first position', () => {
+  const ACCOUNT_ADMIN = {
+    id: '1',
+    role: 'AccountAdmin',
+    base_role_type: 'AccountMembership'
+  }
+
+  const UNORDERED_ROLES = [
+    {
+      id: '13',
+      role: 'NON_BASE_TYPE',
+      base_role_type: 'BASE_TYPE_THREE'
+    },
+    {
+      id: '5',
+      role: 'BASE_TYPE_ONE',
+      base_role_type: 'BASE_TYPE_ONE'
+    },
+    {
+      id: '10',
+      role: 'NON_BASE_TYPE',
+      base_role_type: 'BASE_TYPE_FOUR'
+    },
+    {
+      id: '2',
+      role: 'BASE_TYPE_TWO',
+      base_role_type: 'BASE_TYPE_TWO'
+    },
+    {
+      id: '3',
+      role: 'BASE_TYPE_THREE',
+      base_role_type: 'BASE_TYPE_THREE'
+    },
+    {
+      id: '4',
+      role: 'BASE_TYPE_FOUR',
+      base_role_type: 'BASE_TYPE_FOUR'
+    },
+    {
+      id: '1',
+      role: 'AccountAdmin',
+      base_role_type: 'AccountMembership'
+    }
+  ]
+
+  const orderedRoles = getSortedRoles(UNORDERED_ROLES, ACCOUNT_ADMIN)
+  expect(orderedRoles[0]).toMatchObject(ACCOUNT_ADMIN)
+  expect(orderedRoles).toHaveLength(UNORDERED_ROLES.length)
+})
+
+it('does not return account base roles as course base roles', () => {
+  const accountBaserole = {
+    id: '1',
+    role: 'AccountAdmin',
+    base_role_type: 'AccountMembership'
+  }
+
+  expect(roleIsCourseBaseRole(accountBaserole)).toBeFalsy()
+  expect(roleIsBaseRole(accountBaserole)).toBeTruthy()
 })

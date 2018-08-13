@@ -16,8 +16,8 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 import React from 'react'
-import _ from 'lodash'
 import PropTypes from 'prop-types'
+import _ from 'lodash'
 import ScreenReaderContent from '@instructure/ui-a11y/lib/components/ScreenReaderContent'
 import Button from '@instructure/ui-buttons/lib/components/Button'
 import CloseButton from '@instructure/ui-buttons/lib/components/CloseButton'
@@ -92,10 +92,10 @@ LongDescriptionDialog.defaultProps = {
 }
 
 const Threshold = ({ threshold }) => (
-  <Text size="x-small">
+  <Text size="x-small" weight="normal">
     {
       I18n.t('threshold: %{pts}', {
-        pts: I18n.toNumber(threshold, { precision: 1 } )
+        pts: I18n.toNumber(threshold, { precision: 2, strip_insignificant_zeros: true } )
       })
     }
   </Text>
@@ -114,45 +114,78 @@ export default class Criterion extends React.Component {
 
   render () {
     const {
+      allowExtraCredit,
       assessment,
       criterion,
+      customRatings,
       freeForm,
       onAssessmentChange,
       savedComments,
-      customRatings
+      isSummary,
+      hidePoints,
+      hasPointsColumn
     } = this.props
     const { dialogOpen } = this.state
     const isOutcome = criterion.learning_outcome_id !== undefined
     const useRange = criterion.criterion_use_range
+    const ignoreForScoring = criterion.ignore_for_scoring
     const assessing = onAssessmentChange !== null && assessment !== null
     const updatePoints = (text) => {
-      let points = numberHelper.parse(text)
-      if(Number.isNaN(points)) { points = null }
+      const value = numberHelper.parse(text)
+      const valid = !Number.isNaN(value)
       onAssessmentChange({
-        points,
-        pointsText: text.toString()
+        points: { text, valid, value: valid ? value : undefined }
       })
     }
     const onPointChange = assessing ? updatePoints : undefined
+
+    const pointsPossible = criterion.points
+    const pointsElement = () => (
+      (!hidePoints && !ignoreForScoring) && (
+        <Points
+          key="points"
+          allowExtraCredit={!isOutcome || allowExtraCredit}
+          assessing={assessing}
+          assessment={assessment}
+          onPointChange={onPointChange}
+          pointsPossible={pointsPossible}
+        />
+      )
+    )
+
+    const pointsComment = () => (
+      <CommentText key="comment" assessment={assessment} weight="light" />
+    )
+
+    const pointsFooter = () => [
+      pointsComment(),
+      pointsElement()
+    ]
 
     const commentRating = (
       <Comments
         assessing={assessing}
         assessment={assessment}
+        footer={isSummary ? pointsElement() : null}
         savedComments={savedComments}
         setSaveLater={(saveCommentsForLater) => onAssessmentChange({ saveCommentsForLater })}
         setComments={(comments) => onAssessmentChange({ comments })}
       />
     )
+
     const ratings = freeForm ? commentRating : (
       <Ratings
         assessing={assessing}
+        customRatings={customRatings}
+        footer={isSummary ? pointsFooter() : null}
         tiers={criterion.ratings}
         onPointChange={onPointChange}
-        points={_.get(assessment, 'points')}
-        useRange={useRange}
+        points={_.get(assessment, 'points.value')}
+        pointsPossible={pointsPossible}
         defaultMasteryThreshold={isOutcome ? criterion.mastery_points : criterion.points}
-        customRatings={customRatings}
+        isSummary={isSummary}
+        useRange={useRange}
+        hidePoints={hidePoints}
       />
     )
 
@@ -180,17 +213,16 @@ export default class Criterion extends React.Component {
       />
     ) : null
 
-    const noComments = (_.get(assessment, 'comments') || '').length > 0
-    const pointsPossible = criterion.points
+    const noComments = _.isEmpty(_.get(assessment, 'comments'))
     const longDescription = criterion.long_description
     const threshold = criterion.mastery_points
 
     return (
       <tr className="rubric-criterion">
         <th scope="row" className="description-header">
-          <div className="description container">
+          <div className="description react-rubric-cell">
             {isOutcome ? <OutcomeIcon /> : ''}
-            <Text size="small">
+            <Text size="small" weight="normal">
               {criterion.description}
             </Text>
           </div>
@@ -207,13 +239,13 @@ export default class Criterion extends React.Component {
               />
           </div>
           {
-            threshold !== undefined ? <Threshold threshold={threshold} /> : null
+            !hidePoints && threshold !== undefined ? <Threshold threshold={threshold} /> : null
           }
           {
-            (freeForm || assessing || noComments) ? null : (
+            (freeForm || assessing || isSummary || noComments) ? null : (
               <div className="assessment-comments">
                 <Text size="x-small" weight="normal">{I18n.t('Instructor Comments')}</Text>
-                <CommentText assessment={assessment} weight="light" />
+                {pointsComment()}
               </div>
             )
           }
@@ -221,30 +253,38 @@ export default class Criterion extends React.Component {
         <td className="ratings">
           {ratings}
         </td>
-        <td>
-          <Points
-            assessing={assessing}
-            assessment={assessment}
-            onPointChange={onPointChange}
-            pointsPossible={pointsPossible}
-          />
-          {assessing && !freeForm ? commentInput : null}
-        </td>
+        {
+          hasPointsColumn && (
+            <td>
+              {pointsElement()}
+              {assessing && !freeForm ? commentInput : null}
+            </td>
+          )
+        }
       </tr>
     )
   }
 }
 Criterion.propTypes = {
+  allowExtraCredit: PropTypes.bool,
   assessment: PropTypes.shape(assessmentShape),
+  customRatings: PropTypes.arrayOf(PropTypes.object),
   criterion: PropTypes.shape(criterionShape).isRequired,
   freeForm: PropTypes.bool.isRequired,
   onAssessmentChange: PropTypes.func,
   savedComments: PropTypes.arrayOf(PropTypes.string),
-  customRatings: PropTypes.arrayOf(PropTypes.object)
+  isSummary: PropTypes.bool,
+  hidePoints: PropTypes.bool,
+  hasPointsColumn: PropTypes.bool
 }
+
 Criterion.defaultProps = {
+  allowExtraCredit: false,
   assessment: null,
+  customRatings: [],
   onAssessmentChange: null,
   savedComments: [],
-  customRatings: []
+  isSummary: false,
+  hidePoints: false,
+  hasPointsColumn: true
 }

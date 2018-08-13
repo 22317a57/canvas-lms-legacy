@@ -1321,7 +1321,7 @@ CanvasRails::Application.routes.draw do
       put 'users/:id/merge_into/accounts/:destination_account_id/users/:destination_user_id', controller: 'users', action: 'merge_into'
       post 'users/:id/split', controller: 'users', action: 'split'
 
-      post 'users/self/pandata_token', controller: 'users', action: 'pandata_token'
+      post 'users/self/pandata_events_token', controller: 'users', action: 'pandata_events_token'
 
       scope(controller: :user_observees) do
         get    'users/:user_id/observees', action: :index, as: 'user_observees'
@@ -1371,6 +1371,7 @@ CanvasRails::Application.routes.draw do
       get 'accounts/:id', action: :show, as: :account
       put 'accounts/:id', action: :update
       get 'accounts/:account_id/terms_of_service', action: :terms_of_service
+      get 'accounts/:account_id/help_links', action: :help_links
       get 'accounts/:account_id/courses', action: :courses_api, as: 'account_courses'
       get 'accounts/:account_id/sub_accounts', action: :sub_accounts, as: 'sub_accounts'
       get 'accounts/:account_id/courses/:id', controller: :courses, action: :show, as: 'account_course_show'
@@ -1912,6 +1913,7 @@ CanvasRails::Application.routes.draw do
       prefix = "courses/:course_id/custom_gradebook_columns/:id/data"
       get prefix, action: :index, as: "course_custom_gradebook_column_data"
       put "#{prefix}/:user_id", action: :update, as: "course_custom_gradebook_column_datum"
+      put "courses/:course_id/custom_gradebook_column_data", action: :bulk_update, as: "course_custom_gradebook_column_bulk_data"
     end
 
     scope(controller: :content_exports_api) do
@@ -2194,6 +2196,11 @@ CanvasRails::Application.routes.draw do
     scope(controller: 'lti/ims/results') do
       get "courses/:course_id/line_items/:line_item_id/results/:id", action: :show, as: :lti_result_show
       get "courses/:course_id/line_items/:line_item_id/results", action: :index
+    end
+
+    # Security
+    scope(controller: 'lti/ims/security') do
+      get "security/jwks", action: :jwks, as: :jwks_show
     end
   end
 

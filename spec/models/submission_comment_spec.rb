@@ -21,6 +21,7 @@ require File.expand_path(File.dirname(__FILE__) + '/../spec_helper.rb')
 describe SubmissionComment do
   before(:once) do
     course_with_teacher(:active_all => true)
+    course_with_observer(:active_all => true)
     student_in_course(:active_all => true)
     @assignment = @course.assignments.new(:title => "some assignment")
     @assignment.workflow_state = "published"
@@ -38,6 +39,9 @@ describe SubmissionComment do
 
   describe 'notifications' do
     before(:once) do
+      @student_ended = user_model
+      @section_ended = @course.course_sections.create!(end_at: Time.zone.now - 1.day)
+
       Notification.create(:name => 'Submission Comment', category: 'TestImmediately')
       Notification.create(:name => 'Submission Comment For Teacher')
     end
@@ -54,6 +58,12 @@ describe SubmissionComment do
       course_with_observer(active_all: true, active_cc: true, course: @course, associated_user_id: @student.id)
       @submission.add_comment(:author => @teacher, :comment => "some comment")
       expect(@observer.email_channel.messages.length).to eq 1
+    end
+
+    it "should not send notifications to users in concluded sections" do
+      @submission_ended = @assignment.submit_homework(@student_ended)
+      @comment = @submission_ended.add_comment(:author => @teacher, :comment => "some comment")
+      expect(@comment.messages_sent.keys).not_to be_include('Submission Comment')
     end
 
     it "should not dispatch notification on create if course is unpublished" do
@@ -262,6 +272,13 @@ This text has a http://www.google.com link in it...
       comment = @submission.add_comment(:user => @teacher, :comment => "blah")
       reply = comment.reply_from(:user => @teacher, :text => "oops I meant blah")
       expect(reply.provisional_grade).to be_nil
+    end
+
+    it "should not create reply for observers" do
+      comment = @submission.add_comment(:user => @teacher, :comment => "blah")
+      expect {
+        comment.reply_from(:user => @observer, :text => "some reply")
+      }.to raise_error("Only comment participants may reply to messages")
     end
 
     it "should create reply in the same provisional grade" do

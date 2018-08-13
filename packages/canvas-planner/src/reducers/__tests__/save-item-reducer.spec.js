@@ -63,6 +63,7 @@ function makeState (options = {}) {
   const days = options.days || itemsToDays([itemIdAt(0, 0)]);
   const loadingOptions = options.loading || {};
   const loading = {
+    plannerLoaded: true,
     partialPastDays: [],
     partialFutureDays: [],
     allPastItemsLoaded: false,
@@ -92,6 +93,13 @@ it('does nothing if action.error', () => {
   expect(nextState).toMatchSnapshotAndBe(initialState);
 });
 
+it('does nothing if the planner is not loaded', () => {
+  const initialState = makeState({loading: {plannerLoaded: false}});
+  const action = savedPlannerItem({item: itemIdAt('blah', 0)});
+  const nextState = reducer(initialState, action);
+  expect(nextState).toMatchSnapshotAndBe(initialState);
+});
+
 it('adds a new item to a new day when the new date is within the loaded range', () => {
   const initialState = makeState({days: itemsToDays([itemIdAt(0, 0), itemIdAt(2, 2)])});
   const nextState = reducer(initialState, savedPlannerItem({item: itemIdAt(1, 1)}));
@@ -102,6 +110,12 @@ it('adds a new item to an existing day when the new date is within the loaded ra
   const initialState = makeState({days: itemsToDays([itemIdAt(0, 0), itemIdAt(1, 0)])});
   const nextState = reducer(initialState, savedPlannerItem({item: itemIdAt(2, 0)}));
   expect(nextState).toMatchSnapshotAndNotBe(initialState);
+});
+
+it('adds an item to today even when the only loaded items are in the future', () => {
+  const initialState = makeState({days: itemsToDays([itemIdAt(1, 1)])});
+  const nextState = reducer(initialState, savedPlannerItem({item: itemIdAt(0, 0)}));
+  expect(nextState.days).toHaveLength(2);
 });
 
 it('adds a new item to a new day when the loaded range is open ended in the past', () => {

@@ -133,6 +133,11 @@ Style/FrozenStringLiteralComment:
   Enabled: false
 Style/AsciiComments:
   Enabled: false
+Style/BlockDelimiters:
+  Enabled: true
+  Exclude:
+    - spec/**/*_spec.rb
+    - spec/shared_examples/**/*.rb
 
 # RSpec cops we don't care about
 RSpec/MessageSpies:
@@ -142,6 +147,8 @@ RSpec/HookArgument:
 RSpec/VerifiedDoubles:
   Enabled: false
 RSpec/NamedSubject:
+  Enabled: false
+RSpec/NotToNot:
   Enabled: false
 # RSpec cops we care extra about
 RSpec/EmptyExampleGroup:
@@ -236,6 +243,7 @@ Metrics/BlockLength:
   - gems/*/spec/**/*.rb
   - gems/plugins/*/spec_canvas/**/*.rb
   - spec/**/*.rb
+  - pact/spec/**/*_spec.rb
 Metrics/CyclomaticComplexity:
   Max: 28
 Metrics/PerceivedComplexity:

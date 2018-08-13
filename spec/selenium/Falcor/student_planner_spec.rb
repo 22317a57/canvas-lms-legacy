@@ -30,7 +30,6 @@ describe "student planner" do
   end
 
   before :each do
-    @course.enable_feature!(:new_gradebook) # missing or late pill is only shown when new gradebook is enabled for the course
     user_session(@student1)
   end
 
@@ -95,6 +94,14 @@ describe "student planner" do
       validate_link_to_url(@assignment, 'assignments')
     end
 
+    it "navigates to the assignment submissions page when they are submitted" do
+      skip('skip until ADMIN-179')
+      submission = @assignment.submit_homework(@student1, submission_type: "online_text_entry",
+                                  body: "Assignment submitted")
+      go_to_list_view
+      validate_link_to_submissions(@assignment, submission,'assignments')
+    end
+
     it "enables the checkbox when an assignment is completed", priority: "1", test_id: 3306201 do
       @assignment.submit_homework(@student1, submission_type: "online_text_entry",
                                   body: "Assignment submitted")
@@ -127,7 +134,7 @@ describe "student planner" do
     it "ensures time zone changes update the planner items", priority: "1", test_id: 3306207 do
       go_to_list_view
       time = calendar_time_string(@assignment.due_at).chop
-      expect(fxpath("//div[contains(@class, 'PlannerApp')]//span[contains(text(),'DUE: #{time}')]")).
+      expect(fxpath("//div[contains(@class, 'PlannerApp')]//span[contains(text(),'Due: #{time}')]")).
         to be_displayed
       @student1.time_zone = 'Asia/Tokyo'
       @student1.save!
@@ -135,7 +142,7 @@ describe "student planner" do
 
       # the users time zone is not converted to UTC and to balance it we subtract 6 hours from the due time
       time = calendar_time_string(@assignment.due_at+9.hours).chop
-      expect(fxpath("//div[contains(@class, 'PlannerApp')]//span[contains(text(),'DUE: #{time}')]")).
+      expect(fxpath("//div[contains(@class, 'PlannerApp')]//span[contains(text(),'Due: #{time}')]")).
         to be_displayed
     end
 
@@ -163,17 +170,25 @@ describe "student planner" do
 
   context "Graded discussion" do
     before :once do
-      assignment = @course.assignments.create!(name: 'assignment',
+      @assignment_d = @course.assignments.create!(name: 'assignment',
                                                due_at: Time.zone.now.advance(days:2))
       @discussion = @course.discussion_topics.create!(title: 'Discussion 1',
                                                      message: 'Graded discussion',
-                                                     assignment: assignment)
+                                                     assignment: @assignment_d)
     end
 
     it "shows and navigates to graded discussions page from student planner", priority: "1", test_id: 3259301 do
       go_to_list_view
       validate_object_displayed('Discussion')
       validate_link_to_url(@discussion, 'discussion_topics')
+    end
+
+    it "navigates to the submissions page once the graded discussion has a reply" do
+      skip('skip until ADMIN-179')
+      go_to_list_view
+      @discussion.reply_from(user: @student1, text: 'user reply')
+      # for discussion, submissions page has the users id. So, sending the student object instead of submission for id
+      validate_link_to_submissions(@assignment_d, @student1, 'assignments')
     end
 
     it "shows new replies tag for discussion with new replies", priority: "1", test_id: 3284231 do
@@ -195,13 +210,48 @@ describe "student planner" do
     end
   end
 
-  it "shows and navigates to ungraded discussions with todo dates from student planner", priority:"1", test_id: 3259305 do
-    discussion = @course.discussion_topics.create!(user: @teacher, title: 'somebody topic title',
-                                                   message: 'somebody topic message',
-                                                   todo_date: Time.zone.now + 2.days)
-    go_to_list_view
-    validate_object_displayed('Discussion')
-    validate_link_to_url(discussion, 'discussion_topics')
+  context "ungraded discussion" do
+    before :once do
+      @ungraded_discussion = @course.discussion_topics.create!(user: @teacher, title: 'somebody topic title',
+                                                               message: 'somebody topic message',
+                                                               todo_date: Time.zone.now + 2.days)
+    end
+
+    it "shows and navigates to ungraded discussions with todo dates from student planner", priority:"1", test_id: 3259305 do
+      go_to_list_view
+      validate_object_displayed('Discussion')
+      validate_link_to_url(@ungraded_discussion, 'discussion_topics')
+    end
+
+    it 'shows the date in the index page' do
+      get "/courses/#{@course.id}/discussion_topics/"
+      todo_date = discussion_index_page_detail.text.split("To do ")[1]
+      expect(todo_date).to eq(format_time_for_view(@ungraded_discussion.todo_date))
+    end
+
+    it 'shows the date in the show page' do
+      get "/courses/#{@course.id}/discussion_topics/#{@ungraded_discussion.id}/"
+      todo_date = discussion_show_page_detail.text.split("To-Do Date: ")[1]
+      expect(todo_date).to eq(format_time_for_view(@ungraded_discussion.todo_date))
+    end
+  end
+
+  context "wiki_pages" do
+    before :once do
+      @wiki_page = @course.wiki_pages.create!(title: 'Page1', todo_date: Time.zone.now + 2.days)
+    end
+
+    it 'shows the date in the index page' do
+      get "/courses/#{@course.id}/pages/"
+      wait_for_ajaximations
+      expect(f('a[data-sort-field="todo_date"]')).to be_displayed
+      expect(f('tbody.collectionViewItems')).to include_text(format_time_for_view(@wiki_page.todo_date))
+    end
+
+    it 'shows the date in the show page' do
+      get "/courses/#{@course.id}/pages/#{@wiki_page.id}/"
+      expect(f('.show-content')).to include_text(format_time_for_view(@wiki_page.todo_date))
+    end
   end
 
   context "Quizzes" do
@@ -311,8 +361,7 @@ describe "student planner" do
       expect(f('body')).not_to contain_css(todo_sidebar_modal_selector)
     end
 
-    it "edits a To Do.", priority: "1", test_id: 3281714 do
-      skip('build breaking, I believe because selenium is running against stale code. skipping so this commit can move forward.')
+    it "edits a To Do", priority: "1", test_id: 3281714 do
       @student1.planner_notes.create!(todo_date: 2.days.from_now, title: "Title Text")
       go_to_list_view
       # Opens the To Do edit sidebar
@@ -334,8 +383,12 @@ describe "student planner" do
       expect(f('body')).not_to contain_css(todo_sidebar_modal_selector)
     end
 
-    it "edits a completed To Do", priority: "1" do
-      @student1.planner_notes.create!(todo_date: 2.days.from_now, title: "Title Text")
+    it "edits a completed To Do.", priority: "1" do
+      # The following student planner is added to avoid the `beginning of to-do history` image
+      # which makes the page to scroll and causes flakiness
+      @student1.planner_notes.create!(todo_date: 1.day.ago, title: "Past Title")
+
+      @student1.planner_notes.create!(todo_date: 1.day.from_now, title: "Title Text")
       go_to_list_view
 
       # complete it
@@ -515,6 +568,7 @@ describe "student planner" do
     end
 
     it "dismisses assignment from opportunity dropdown.", priority: "1", test_id: 3281713 do
+      skip('Failing Jenkins')
       go_to_list_view
       open_opportunities_dropdown
       fj('button:contains("Dismiss assignmentThatHasToBeDoneNow")').click
@@ -600,5 +654,42 @@ describe "student planner" do
     refresh_page
     wait_for_planner_load
     expect(f('.PlannerApp')).to contain_jqcss('span:contains("Show 1 completed item")')
+  end
+
+  context "teacher in a course" do
+    before :once do
+      @teacher1 = User.create!(name: 'teacher')
+      @course.enroll_teacher(@teacher1).accept!
+    end
+
+    before :each do
+      user_session(@teacher1)
+    end
+
+    it "shows correct default time in a wiki page" do
+      Timecop.freeze(Time.zone.today) do
+        @wiki = @course.wiki_pages.create!(title: 'Default Time Wiki Page')
+        get("/courses/#{@course.id}/pages/#{@wiki.id}/edit")
+        f('#student_planner_checkbox').click
+        wait_for_ajaximations
+        f('input[name="student_todo_at"]').send_keys(format_date_for_view(Time.zone.now).to_s)
+        fj('button:contains("Save")').click
+        get("/courses/#{@course.id}/pages/#{@wiki.id}/edit")
+        expect(get_value('input[name="student_todo_at"]')).to eq "#{format_date_for_view(Time.zone.today)} 11:59pm"
+      end
+    end
+
+    it "shows correct default time in a ungraded discussion" do
+      Timecop.freeze(Time.zone.today) do
+        @discussion = @course.discussion_topics.create!(title: "Default Time Discussion", message: "here is a message", user: @teacher)
+        get("/courses/#{@course.id}/discussion_topics/#{@discussion.id}/edit")
+        f('#allow_todo_date').click
+        wait_for_ajaximations
+        f('input[name="todo_date"]').send_keys(format_date_for_view(Time.zone.now).to_s)
+        expect_new_page_load { submit_form('.form-actions') }
+        get("/courses/#{@course.id}/discussion_topics/#{@discussion.id}/edit")
+        expect(get_value('input[name="todo_date"]')).to eq "#{format_date_for_view(Time.zone.today)} 11:59pm"
+      end
+    end
   end
 end

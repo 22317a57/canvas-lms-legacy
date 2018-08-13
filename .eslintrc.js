@@ -10,6 +10,7 @@ module.exports = {
     "prettier",
     "prettier/react",
     "plugin:jest/recommended",
+    "plugin:jsx-a11y/recommended"
   ],
   parserOptions: {
     ecmaVersion: 7,
@@ -43,8 +44,9 @@ module.exports = {
     "react/no-typos": [0],
     "no-cond-assign": ["warn", "except-parens"],
     "no-else-return": [0],
+    "no-nested-ternary": "off",
     "no-plusplus": [0],
-    "no-return-assign": ['error', 'except-parens'],
+    "no-return-assign": "off",
     "no-underscore-dangle": [0],
     "no-unused-vars": [2, { "argsIgnorePattern": "^_"}],
     "no-use-before-define": "off",

@@ -31,7 +31,6 @@ import 'jquery.instructure_date_and_time'
 
 import Badge from '@instructure/ui-elements/lib/components/Badge'
 import View from '@instructure/ui-layout/lib/components/View'
-import Flex, { FlexItem } from '@instructure/ui-layout/lib/components/Flex'
 import Grid, { GridCol, GridRow} from '@instructure/ui-layout/lib/components/Grid'
 import Heading from '@instructure/ui-elements/lib/components/Heading'
 
@@ -53,7 +52,7 @@ import IconUpdownLine from '@instructure/ui-icons/lib/Line/IconUpdown'
 import Pill from '@instructure/ui-elements/lib/components/Pill'
 import ScreenReaderContent from '@instructure/ui-a11y/lib/components/ScreenReaderContent'
 import Text from '@instructure/ui-elements/lib/components/Text'
-import { MenuItem } from '@instructure/ui-core/lib/components/Menu'
+import { MenuItem } from '@instructure/ui-menu/lib/components/Menu'
 
 import DiscussionModel from 'compiled/models/DiscussionTopic'
 import LockIconView from 'compiled/views/LockIconView'
@@ -128,6 +127,7 @@ export class DiscussionRow extends Component {
     draggable: bool,
     duplicateDiscussion: func.isRequired,
     isDragging: bool,
+    isMasterCourse: bool.isRequired,
     masterCourseData: masterCourseDataShape,
     moveCard: func, // eslint-disable-line
     onMoveDiscussion: func,
@@ -449,8 +449,9 @@ export class DiscussionRow extends Component {
   }
 
   renderSectionsTooltip = () => {
+
     if (this.props.contextType === "group" || this.props.discussion.assignment ||
-      this.props.discussion.group_category_id) {
+      this.props.discussion.group_category_id || this.props.isMasterCourse) {
       return null
     }
 
@@ -496,32 +497,44 @@ export class DiscussionRow extends Component {
 
   renderDueDate = () => {
     const assignment = this.props.discussion.assignment // eslint-disable-line
-    const dueDateString = assignment && assignment.due_at
-      ? I18n.t('Due %{date}', { date: $.datetimeString(assignment.due_at) })
-      : null
+    let dueDateString = null;
+    let className = '';
+    if (assignment && assignment.due_at) {
+      className = 'due-date'
+      dueDateString = I18n.t('Due %{date}', { date: $.datetimeString(assignment.due_at) });
+    } else if (this.props.discussion.todo_date) {
+      className = 'todo-date'
+      dueDateString = I18n.t('To do %{date}', { date: $.datetimeString(this.props.discussion.todo_date)});
+    }
     return (
-      <div className="ic-discussion-row__content">
+      <div className={`ic-discussion-row__content ${className}`}>
         { dueDateString }
       </div>
     )
   }
 
   getAvailabilityString = () => {
-    const availabilityBegin = this.props.discussion.delayed_post_at
-    const availabilityEnd = this.props.discussion.lock_at
-    if (availabilityBegin && !isPassedDelayedPostAt({ checkDate: null, delayedDate: availabilityBegin })) {
+    const assignment = this.props.discussion.assignment
+
+    const availabilityBegin =
+      this.props.discussion.delayed_post_at || (assignment && assignment.unlock_at)
+    const availabilityEnd = this.props.discussion.lock_at || (assignment && assignment.lock_at)
+
+    if (
+      availabilityBegin &&
+      !isPassedDelayedPostAt({checkDate: null, delayedDate: availabilityBegin})
+    ) {
       return I18n.t('Not available until %{date}', {date: $.datetimeString(availabilityBegin)})
     }
     if (availabilityEnd) {
-      if (isPassedDelayedPostAt({ checkDate: null, delayedDate: availabilityEnd })) {
+      if (isPassedDelayedPostAt({checkDate: null, delayedDate: availabilityEnd})) {
         return I18n.t('Was locked at %{date}', {date: $.datetimeString(availabilityEnd)})
       } else {
-        return I18n.t('Available until %{date}',{date: $.datetimeString(availabilityEnd)})
+        return I18n.t('Available until %{date}', {date: $.datetimeString(availabilityEnd)})
       }
     }
-    return ""
+    return ''
   }
-
   renderAvailabilityDate = () => {
     // Check if we are too early for the topic to be available
     const availabilityString = this.getAvailabilityString();
@@ -630,14 +643,14 @@ export class DiscussionRow extends Component {
     return (
       this.props.connectDropTarget(this.props.connectDragSource(
         <div style={{ opacity: (this.props.isDragging) ? 0 : 1 }} className={`${classes} ic-discussion-row`}>
-          <Flex width="100%">
-            <FlexItem shrink padding="xx-small">
+          <div className="ic-discussion-row-container">
+            <span className="ic-drag-handle-container">
               {this.renderDragHandleIfAppropriate()}
-            </FlexItem>
-            <FlexItem shrink padding="xx-small">
+            </span>
+            <span className="ic-drag-handle-container">
               {this.renderIcon()}
-            </FlexItem>
-            <FlexItem padding="xx-small" grow shrink>
+            </span>
+            <span className="ic-discussion-content-container">
               <Grid startAt="medium" vAlign="middle" rowSpacing="none" colSpacing="none">
                 <GridRow vAlign="middle">
                   <GridCol vAlign="middle" textAlign="start">
@@ -666,11 +679,30 @@ export class DiscussionRow extends Component {
                   </GridCol>
                 </GridRow>
               </Grid>
-            </FlexItem>
-          </Flex>
+          </span>
+          </div>
         </div>, {dropEffect: 'copy'}
       ))
     )
+  }
+
+  renderBlueUnreadBadge() {
+    if(this.props.discussion.read_state !== "read") {
+      return (
+        <Badge
+          margin="0 small x-small 0"
+          standalone
+          type="notification"
+          formatOutput={() => <ScreenReaderContent>{I18n.t('Unread')}</ScreenReaderContent>}
+        />
+      )
+    } else {
+      return (
+        <View display="block" margin="0 small x-small 0">
+          <View display="block" margin="0 small x-small 0" />
+        </View>
+      )
+    }
   }
 
   render () {
@@ -684,11 +716,7 @@ export class DiscussionRow extends Component {
           <GridRow>
           {/* discussion topics is different for badges so we use our own read indicator instead of passing to isRead */}
             <GridCol width="auto">
-            {!(this.props.discussion.read_state === "read")
-              ? <Badge margin="0 small x-small 0" standalone type="notification" />
-              : <View display="block" margin="0 small x-small 0">
-            <View display="block" margin="0 small x-small 0" />
-            </View>}
+            {this.renderBlueUnreadBadge()}
             </GridCol>
             <GridCol>
               {this.renderDiscussion()}
@@ -713,6 +741,10 @@ const mapDispatch = (dispatch) => {
 const mapState = (state, ownProps) => {
   const { discussion } = ownProps
   const cyoe = CyoeHelper.getItemData(discussion.assignment_id)
+  let masterCourse = true
+  if(!state.masterCourseData || !state.masterCourseData.isMasterCourse) {
+    masterCourse = false
+  }
   const shouldShowMasteryPathsPill = cyoe.isReleased && cyoe.releasedLabel &&
     (cyoe.releasedLabel !== "") && discussion.permissions.update
   const propsFromState = {
@@ -729,6 +761,7 @@ const mapState = (state, ownProps) => {
     displayManageMenu: discussion.permissions.delete,
     displayPinMenuItem: state.permissions.moderate,
     masterCourseData: state.masterCourseData,
+    isMasterCourse: masterCourse
   }
   return Object.assign({}, ownProps, propsFromState)
 }

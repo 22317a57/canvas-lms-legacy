@@ -444,7 +444,7 @@ describe SubmissionsController do
       course_with_student_and_submitted_homework
 
       get 'index', params: {:course_id => @course.id, :assignment_id => @assignment.id, :zip => '1'}, format: 'json'
-      expect(response).to be_success
+      expect(response).to be_successful
 
       a = Attachment.last
       expect(a.user).to eq @teacher
@@ -456,7 +456,7 @@ describe SubmissionsController do
 
       request.headers['HTTP_ACCEPT'] = '*/*'
       get 'index', params: { :course_id => @course.id, :assignment_id => @assignment.id, :zip => '1' }
-      expect(response).to be_success
+      expect(response).to be_successful
       expect(response.content_type).to eq 'test/file'
     end
   end
@@ -469,6 +469,12 @@ describe SubmissionsController do
     end
 
     let(:body) { JSON.parse(response.body)['submission'] }
+
+    it "redirects to login when logged out" do
+      remove_user_session
+      get :show, params: {course_id: @context.id, assignment_id: @assignment.id, id: @student.id}
+      expect(response).to redirect_to(login_url)
+    end
 
     it "renders show template" do
       get :show, params: {course_id: @context.id, assignment_id: @assignment.id, id: @student.id}
@@ -502,7 +508,7 @@ describe SubmissionsController do
       @submission.mark_unread(@student)
       @submission.save!
       get :show, params: {course_id: @context.id, assignment_id: @assignment.id, id: @student.id}, format: :json
-      expect(response).to be_success
+      expect(response).to be_successful
       submission = Submission.find(@submission.id)
       expect(submission.read?(@student)).to be_truthy
     end
@@ -514,7 +520,7 @@ describe SubmissionsController do
       @submission.mark_unread(@teacher)
       @submission.save!
       get :show, params: {course_id: @context.id, assignment_id: @assignment.id, id: @student.id}, format: :json
-      expect(response).to be_success
+      expect(response).to be_successful
       submission = Submission.find(@submission.id)
       expect(submission.read?(@student)).to be_falsey
       expect(submission.read?(@teacher)).to be_falsey
@@ -543,47 +549,41 @@ describe SubmissionsController do
       expect(body['published_score']).to be nil
     end
 
-    context "for an assignment that has anonymous grading and muted with anonymous_moderated_marking enabled" do
-      before :each do
-        @assignment.root_account.enable_feature!(:anonymous_moderated_marking)
-      end
+    it "renders the page for submitting student" do
+      user_session(@student)
+      @assignment.update!(anonymous_grading: true, muted: true)
+      get :show, params: {course_id: @context.id, assignment_id: @assignment.id, id: @student.id}
+      assert_status(200)
+    end
 
-      it "renders the page for submitting student" do
-        user_session(@student)
-        @assignment.update!(anonymous_grading: true, muted: true)
-        get :show, params: {course_id: @context.id, assignment_id: @assignment.id, id: @student.id}
-        assert_status(200)
-      end
+    it "renders unauthorized for non-submitting student" do
+      new_student = User.create!
+      @context.enroll_student(new_student, enrollment_state: 'active')
+      user_session(new_student)
+      @assignment.update!(anonymous_grading: true, muted: true)
+      get :show, params: {course_id: @context.id, assignment_id: @assignment.id, id: @student.id}
+      assert_unauthorized
+    end
 
-      it "renders unauthorized for non-submitting student" do
-        new_student = User.create!
-        @context.enroll_student(new_student, enrollment_state: 'active')
-        user_session(new_student)
-        @assignment.update!(anonymous_grading: true, muted: true)
-        get :show, params: {course_id: @context.id, assignment_id: @assignment.id, id: @student.id}
-        assert_unauthorized
-      end
+    it "renders unauthorized for teacher" do
+      user_session(@teacher)
+      @assignment.update!(anonymous_grading: true, muted: true)
+      get :show, params: {course_id: @context.id, assignment_id: @assignment.id, id: @student.id}
+      assert_unauthorized
+    end
 
-      it "renders unauthorized for teacher" do
-        user_session(@teacher)
-        @assignment.update!(anonymous_grading: true, muted: true)
-        get :show, params: {course_id: @context.id, assignment_id: @assignment.id, id: @student.id}
-        assert_unauthorized
-      end
+    it "renders unauthorized for admin" do
+      user_session(account_admin_user)
+      @assignment.update!(anonymous_grading: true, muted: true)
+      get :show, params: {course_id: @context.id, assignment_id: @assignment.id, id: @student.id}
+      assert_unauthorized
+    end
 
-      it "renders unauthorized for admin" do
-        user_session(account_admin_user)
-        @assignment.update!(anonymous_grading: true, muted: true)
-        get :show, params: {course_id: @context.id, assignment_id: @assignment.id, id: @student.id}
-        assert_unauthorized
-      end
-
-      it "renders the page for site admin" do
-        user_session(site_admin_user)
-        @assignment.update!(anonymous_grading: true, muted: true)
-        get :show, params: {course_id: @context.id, assignment_id: @assignment.id, id: @student.id}
-        assert_status(200)
-      end
+    it "renders the page for site admin" do
+      user_session(site_admin_user)
+      @assignment.update!(anonymous_grading: true, muted: true)
+      get :show, params: {course_id: @context.id, assignment_id: @assignment.id, id: @student.id}
+      assert_status(200)
     end
 
     context "with user id not present in course" do
@@ -615,7 +615,7 @@ describe SubmissionsController do
 
       get "show", params: {:id => @submission.user.id, :assignment_id => @assignment.id, :course_id => @context.id}
 
-      expect(response).to be_success
+      expect(response).to be_successful
 
       expect(assigns[:visible_rubric_assessments]).to eq [@assessment]
     end

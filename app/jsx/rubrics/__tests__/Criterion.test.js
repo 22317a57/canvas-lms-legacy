@@ -17,6 +17,7 @@
  */
 import _ from 'lodash'
 import React from 'react'
+import sinon from 'sinon'
 import { shallow } from 'enzyme'
 import Criterion from '../Criterion'
 import { rubrics, assessments } from './fixtures'
@@ -94,5 +95,111 @@ describe('Criterion', () => {
     expect(dialog.shallow().find('div').html()).toMatchSnapshot()
     dialog.prop('close')()
     expectState(false)
+  })
+
+  it('only shows instructor comments in sidebar when relevant', () => {
+    // in particular, we only show the comment sidebar when:
+    // - there are comments
+    // - the rubric is not free-form
+    // - we are not assessing the rubric
+    // - the rubric is not in summary mode
+    const comments = (changes) => shallow(
+      <Criterion
+        assessment={assessments.points.data[1]}
+        criterion={rubrics.points.criteria[1]}
+        freeForm={false}
+        {...changes}
+      />
+    ).find('CommentText')
+
+    expect(comments()).toHaveLength(1)
+    const noComments = { ...assessments.points.data[1], comments: undefined }
+    expect(comments({ assessment: noComments })).toHaveLength(0)
+    expect(comments({ freeForm: true })).toHaveLength(0)
+    expect(comments({ onAssessmentChange: () => {} })).toHaveLength(0)
+    expect(comments({ isSummary: true })).toHaveLength(0)
+  })
+
+  it('does not have a points column when hasPointsColumn is false', () => {
+    const el = shallow(
+      <Criterion
+        assessment={assessments.points.data[1]}
+        criterion={rubrics.points.criteria[1]}
+        freeForm={false}
+        hasPointsColumn={false}
+      />
+    )
+
+    expect(el.find('td')).toHaveLength(1)
+  })
+
+  it('allows extra credit for outcomes when enabled', () => {
+    const el = shallow(
+      <Criterion
+        allowExtraCredit
+        assessment={assessments.points.data[1]}
+        criterion={rubrics.points.criteria[1]}
+        freeForm={false}
+        onAssessmentChange={() => {}}
+      />
+    )
+
+    expect(el.find('Points').prop('allowExtraCredit')).toEqual(true)
+  })
+
+  describe('the Points for a criterion', () => {
+    const points = (props) => shallow(
+      <Criterion
+        assessment={assessments.points.data[1]}
+        freeForm={false}
+        {...props}
+      />
+    ).find('Points')
+
+    const criterion = rubrics.points.criteria[1]
+    it('are visible by default', () => {
+      expect(points({ criterion })).toHaveLength(1)
+    })
+
+    it('can be changed', () => {
+      const onAssessmentChange = sinon.spy()
+      const el = points({ criterion, onAssessmentChange })
+      const onPointChange = el.find('Points').prop('onPointChange')
+
+      onPointChange('10')
+      onPointChange('10.245')
+      onPointChange('blergh')
+      expect(onAssessmentChange.args).toEqual([
+        [{ points: { text: '10', valid: true, value: 10 } }],
+        [{ points: { text: '10.245', valid: true, value: 10.245 } } ],
+        [{ points: { text: 'blergh', valid: false, value: undefined } }],
+      ])
+    })
+
+    it('are hidden when hidePoints is true', () => {
+      expect(points({ criterion, hidePoints: true })).toHaveLength(0)
+    })
+
+    describe('when ignore_for_scoring is set', () => {
+      const ignoredPoints = (props) => points({
+        criterion: {
+          ...rubrics.points.criteria[1],
+          ignore_for_scoring: true
+        },
+        ...props
+      })
+
+      it('are not shown by default', () =>
+        expect(ignoredPoints()).toHaveLength(0)
+      )
+
+      it('are not shown in summary mode', () =>
+        expect(ignoredPoints({ isSummary: true })).toHaveLength(0)
+      )
+
+      it('are not shown when assessing', () => {
+        expect(ignoredPoints({ onAssessmentChange: () => {} })).toHaveLength(0)
+      })
+    })
   })
 })

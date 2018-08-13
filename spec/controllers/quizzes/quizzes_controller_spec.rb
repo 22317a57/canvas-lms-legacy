@@ -217,7 +217,7 @@ describe Quizzes::QuizzesController do
       context "if xhr request" do
         it "returns the new quiz's edit url" do
           post 'new', params: {:course_id => @course.id}, xhr: true
-          expect(response).to have_http_status :success
+          expect(response).to be_successful
           expect(JSON.parse(response.body)['url']).to match(%r{/courses/\w+/quizzes/\w+/edit$})
         end
       end
@@ -408,7 +408,7 @@ describe Quizzes::QuizzesController do
       course_quiz(active=true)
       @quiz.unpublish!
       get 'show', params: {course_id: @course.id, id: @quiz.id}
-      expect(response).not_to be_success
+      expect(response).not_to be_successful
     end
 
     it 'logs a single asset access entry with an action level of "view"' do
@@ -439,7 +439,7 @@ describe Quizzes::QuizzesController do
 
       get 'show', params: {course_id: @course.id, id: @quiz.id}
 
-      expect(response).to be_success
+      expect(response).to be_successful
       expect(submission.reload.has_seen_results).to eq true
     end
 
@@ -459,7 +459,7 @@ describe Quizzes::QuizzesController do
 
       get 'show', params: {course_id: @course.id, id: @quiz.id}
 
-      expect(response).to be_success
+      expect(response).to be_successful
       expect(submission.reload.has_seen_results).to be_nil
     end
 
@@ -495,7 +495,7 @@ describe Quizzes::QuizzesController do
 
         user_session(@teacher)
         get 'show', params: { course_id: @course.id, id: @quiz.id, take: '1', preview: '1' }
-        expect(response).to have_http_status(:success)
+        expect(response).to be_successful
       end
     end
   end
@@ -995,7 +995,7 @@ describe Quizzes::QuizzesController do
       @submission = @quiz.generate_submission(@student)
       get 'history', params: {:course_id => @course.id, :quiz_id => @quiz.id}
 
-      expect(response).to be_success
+      expect(response).to be_successful
       expect(assigns[:user]).not_to be_nil
       expect(assigns[:user]).to eql(@student)
       expect(assigns[:quiz]).not_to be_nil
@@ -1010,7 +1010,7 @@ describe Quizzes::QuizzesController do
       @submission.submission.mark_unread(@student)
       @submission.save!
       get 'history', params: {:course_id => @course.id, :quiz_id => @quiz.id}
-      expect(response).to be_success
+      expect(response).to be_successful
       submission = Quizzes::QuizSubmission.find(@submission.id)
       expect(submission.submission.read?(@student)).to be_truthy
     end
@@ -1022,7 +1022,7 @@ describe Quizzes::QuizzesController do
       @submission.submission.mark_unread(@student)
       @submission.save!
       get 'history', params: {:course_id => @course.id, :quiz_id => @quiz.id, :user_id => @student.id}
-      expect(response).to be_success
+      expect(response).to be_successful
       submission = Quizzes::QuizSubmission.find(@submission.id)
       expect(submission.submission.read?(@teacher)).to be_falsey
       expect(submission.submission.read?(@student)).to be_falsey
@@ -1036,7 +1036,7 @@ describe Quizzes::QuizzesController do
       user_session(@observer)
       get 'history', params: {:course_id => @course.id, :quiz_id => @quiz.id, :user_id => @student.id}
 
-      expect(response).to be_success
+      expect(response).to be_successful
       expect(assigns[:user]).not_to be_nil
       expect(assigns[:user]).to eql(@student)
       expect(assigns[:quiz]).not_to be_nil
@@ -1050,7 +1050,7 @@ describe Quizzes::QuizzesController do
       s = @quiz.generate_submission(@student2)
       @submission = @quiz.generate_submission(@student)
       get 'history', params: {:course_id => @course.id, :quiz_id => @quiz.id, :user_id => @student2.id}
-      expect(response).not_to be_success
+      expect(response).not_to be_successful
     end
 
     it "should allow viewing other submissions if a teacher" do
@@ -1059,7 +1059,7 @@ describe Quizzes::QuizzesController do
       @submission = @quiz.generate_submission(@teacher)
       get 'history', params: {:course_id => @course.id, :quiz_id => @quiz.id, :user_id => @student.id}
 
-      expect(response).to be_success
+      expect(response).to be_successful
       expect(assigns[:user]).not_to be_nil
       expect(assigns[:user]).to eql(@student)
       expect(assigns[:quiz]).not_to be_nil
@@ -1096,7 +1096,7 @@ describe Quizzes::QuizzesController do
         @submission = @quiz.generate_submission(@teacher)
         get 'history', params: {:course_id => @course.id, :quiz_id => @quiz.id, :user_id => @student.id}
 
-        expect(response).to be_success
+        expect(response).to be_successful
       end
 
       it "should allow teacher viewing if the term has ended" do
@@ -1106,7 +1106,7 @@ describe Quizzes::QuizzesController do
         @quiz.generate_submission(@student)
         get 'history', params: {:course_id => @course.id, :quiz_id => @quiz.id, :user_id => @student.id}
 
-        expect(response).to be_success
+        expect(response).to be_successful
       end
 
       it "should allow teacher viewing if the enrollment is concluded" do
@@ -1116,7 +1116,7 @@ describe Quizzes::QuizzesController do
         @quiz.generate_submission(@student)
         get 'history', params: {:course_id => @course.id, :quiz_id => @quiz.id, :user_id => @student.id}
 
-        expect(response).to be_success
+        expect(response).to be_successful
       end
     end
 
@@ -1151,7 +1151,7 @@ describe Quizzes::QuizzesController do
 
         user_session(@teacher)
         get 'history', params: { course_id: @course.id, quiz_id: @quiz.id, quiz_submission_id: quiz_submission.id }
-        expect(response).to have_http_status(:success)
+        expect(response).to be_successful
       end
     end
   end
@@ -1173,7 +1173,7 @@ describe Quizzes::QuizzesController do
       post 'create', params: {:course_id => @course.id, :quiz => {:title => "some quiz"}}
       expect(assigns[:quiz]).not_to be_nil
       expect(assigns[:quiz].title).to eql("some quiz")
-      expect(response).to be_success
+      expect(response).to be_successful
     end
 
     it "creates quizzes with overrides" do
@@ -1193,7 +1193,7 @@ describe Quizzes::QuizzesController do
           }]
         }}
 
-      expect(response).to be_success
+      expect(response).to be_successful
       quiz = assigns[:quiz].overridden_for(@teacher)
       overrides = AssignmentOverrideApplicator.overrides_for_assignment_and_user(quiz, @teacher)
       expect(overrides.length).to eq 1
@@ -1588,6 +1588,22 @@ describe Quizzes::QuizzesController do
         @quiz.update_attribute(:workflow_state, 'created')
         post 'update', params: @no_changes
         expect(@quiz.reload).to be_edited
+      end
+
+      it "runs DueDateCacher when transitioning from ungraded quiz to graded" do
+        @quiz.update!(quiz_type: 'practice_quiz')
+        due_date_cacher = instance_double(DueDateCacher)
+        allow(DueDateCacher).to receive(:new).and_return(due_date_cacher)
+
+        expect(due_date_cacher).to receive(:recompute).once
+
+        post 'update', params: {
+          course_id: @course.id,
+          id: @quiz.id,
+          quiz: {
+            quiz_type: 'assignment'
+          }
+        }
       end
 
       it "does not runs DueDateCacher when nothing is updated" do
@@ -2036,7 +2052,7 @@ describe Quizzes::QuizzesController do
       course_quiz
       @enrollment.conclude
       get 'statistics', params: {:course_id => @course.id, :quiz_id => @quiz.id}
-      expect(response).to be_success
+      expect(response).to be_successful
       expect(response).to render_template('statistics_cqs')
     end
 
@@ -2069,7 +2085,7 @@ describe Quizzes::QuizzesController do
 
 
         get 'statistics', params: {:course_id => @course.id, :quiz_id => @quiz.id, :all_versions => '1'}
-        expect(response).to be_success
+        expect(response).to be_successful
         expect(response).to render_template('statistics_cqs')
       end
     end
@@ -2080,7 +2096,7 @@ describe Quizzes::QuizzesController do
       @course.save!
       course_quiz
       get 'statistics', params: {:course_id => @course.id, :quiz_id => @quiz.id}
-      expect(response).to be_success
+      expect(response).to be_successful
       expect(response).to render_template('statistics_cqs')
     end
   end
@@ -2091,13 +2107,13 @@ describe Quizzes::QuizzesController do
     it "should allow concluded teachers to see a read-only view of a quiz" do
       user_session(@teacher)
       get 'read_only', params: {:course_id => @course.id, :quiz_id => @quiz.id}
-      expect(response).to be_success
+      expect(response).to be_successful
       expect(response).to render_template('read_only')
 
       @enrollment.conclude
       controller.js_env.clear
       get 'read_only', params: {:course_id => @course.id, :quiz_id => @quiz.id}
-      expect(response).to be_success
+      expect(response).to be_successful
       expect(response).to render_template('read_only')
     end
 
@@ -2114,7 +2130,7 @@ describe Quizzes::QuizzesController do
     it "should include banks hash" do
       user_session(@teacher)
       get 'read_only', params: {:course_id => @course.id, :quiz_id => @quiz.id}
-      expect(response).to be_success
+      expect(response).to be_successful
       expect(assigns[:banks_hash]).not_to be_nil
     end
   end
@@ -2167,7 +2183,7 @@ describe Quizzes::QuizzesController do
 
     it "renders nothing if there's no submission for current user" do
       get 'submission_html', params: {course_id: @course.id, quiz_id: @quiz.id}
-      expect(response).to be_success
+      expect(response).to be_successful
       expect(response.body.strip).to be_empty
     end
 
@@ -2176,7 +2192,7 @@ describe Quizzes::QuizzesController do
       sub.mark_completed
       sub.save!
       get 'submission_html', params: {course_id: @course.id, quiz_id: @quiz.id}
-      expect(response).to be_success
+      expect(response).to be_successful
       expect(response).to render_template("quizzes/submission_html")
     end
   end
@@ -2197,7 +2213,7 @@ describe Quizzes::QuizzesController do
       submission.save!
 
       get 'submission_html', params: {course_id: @course.id, quiz_id: @quiz.id}
-      expect(response).to be_success
+      expect(response).to be_successful
 
       expect(response).to render_template("quizzes/submission_html")
       expect(submission.reload.has_seen_results).to eq true
@@ -2257,7 +2273,7 @@ describe Quizzes::QuizzesController do
       @quiz.assignment = assignment
 
       get 'submission_versions', params: {:course_id => @course.id, :quiz_id => @quiz.id}
-      expect(response).to be_success
+      expect(response).to be_successful
       expect(response.body).to match(/^\s?$/)
     end
   end

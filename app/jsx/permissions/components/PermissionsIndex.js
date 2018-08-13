@@ -31,9 +31,10 @@ import ScreenReaderContent from '@instructure/ui-a11y/lib/components/ScreenReade
 import TabList, {TabPanel} from '@instructure/ui-tabs/lib/components/TabList'
 import TextInput from '@instructure/ui-forms/lib/components/TextInput'
 import Select from '@instructure/ui-forms/lib/components/Select'
+import Heading from '@instructure/ui-elements/lib/components/Heading'
 
 import actions from '../actions'
-import propTypes, {COURSE, ACCOUNT} from '../propTypes'
+import propTypes, {COURSE, ACCOUNT, ALL_ROLES_VALUE, ALL_ROLES_LABEL} from '../propTypes'
 
 import {ConnectedPermissionsTable} from './PermissionsTable'
 import {ConnectedPermissionTray} from './PermissionTray'
@@ -49,18 +50,21 @@ export default class PermissionsIndex extends Component {
     roles: arrayOf(propTypes.role).isRequired,
     searchPermissions: func.isRequired,
     setAndOpenAddTray: func.isRequired,
-    tabChanged: func.isRequired
+    tabChanged: func.isRequired,
+    selectedRoles: arrayOf(propTypes.filteredRole).isRequired
   }
 
   state = {
     permissionSearchString: '',
-    selectedRoles: [{value: '0', label: 'All Roles'}],
     contextType: COURSE
   }
 
   onRoleFilterChange = (_, value) => {
-    const valueCopy = value.filter(option => option.value !== '0')
-    this.setState({selectedRoles: valueCopy}, this.filterRoles)
+    const valueCopy = value.filter(option => option.value !== ALL_ROLES_VALUE)
+    this.props.filterRoles({
+      selectedRoles: valueCopy,
+      contextType: this.state.contextType
+    })
   }
 
   onSearchStringChange = e => {
@@ -70,8 +74,16 @@ export default class PermissionsIndex extends Component {
   onTabChanged = (newIndex, oldIndex) => {
     if (newIndex === oldIndex) return
     const newContextType = newIndex === COURSE_TAB_INDEX ? COURSE : ACCOUNT
+    this.props.filterRoles({
+      selectedRoles: [{value: ALL_ROLES_VALUE, label: ALL_ROLES_LABEL}],
+      contextType: this.state.contextType
+    })
     this.setState(
-      {permissionSearchString: '', selectedRoles: [], contextType: newContextType},
+      {
+        permissionSearchString: '',
+
+        contextType: newContextType
+      },
       () => {
         this.props.tabChanged(newContextType)
       }
@@ -79,9 +91,10 @@ export default class PermissionsIndex extends Component {
   }
 
   onAutocompleteBlur = e => {
-    if (e.target.value === '' && this.state.selectedRoles.length === 0) {
-      this.setState({
-        selectedRoles: [{value: '0', label: 'All Roles'}]
+    if (e.target.value === '' && this.props.selectedRoles.length === 0) {
+      this.props.filterRoles({
+        selectedRoles: [{value: ALL_ROLES_VALUE, label: ALL_ROLES_LABEL}],
+        contextType: this.state.contextType
       })
     }
   }
@@ -90,13 +103,6 @@ export default class PermissionsIndex extends Component {
     leading: false,
     trailing: true
   })
-
-  filterRoles = () => {
-    this.props.filterRoles({
-      selectedRoles: this.state.selectedRoles,
-      contextType: this.state.contextType
-    })
-  }
 
   renderHeader() {
     return (
@@ -117,7 +123,7 @@ export default class PermissionsIndex extends Component {
                 <Select
                   id="permissions-role-filter"
                   label={<ScreenReaderContent>{I18n.t('Filter Roles')}</ScreenReaderContent>}
-                  selectedOption={this.state.selectedRoles}
+                  selectedOption={this.props.selectedRoles}
                   onBlur={this.onAutocompleteBlur}
                   multiple
                   editable
@@ -144,6 +150,7 @@ export default class PermissionsIndex extends Component {
               </GridCol>
               <GridCol width={2}>
                 <Button
+                  id="add_role"
                   variant="primary"
                   margin="0 x-small 0 0"
                   onClick={this.props.setAndOpenAddTray}
@@ -161,9 +168,18 @@ export default class PermissionsIndex extends Component {
   render() {
     return (
       <div className="permissions-v2__wrapper">
+        <ScreenReaderContent>
+          <Heading level="h1">{I18n.t('Permissions')}</Heading>
+        </ScreenReaderContent>
         <ConnectedRoleTray />
         <ConnectedAddTray />
-        <ConnectedPermissionTray />
+        <ConnectedPermissionTray
+          tab={
+            this.props.roles.length
+              ? this.props.roles.find(role => !!role.displayed).contextType
+              : COURSE
+          }
+        />
         <TabList onChange={this.onTabChanged}>
           <TabPanel title={I18n.t('Course Roles')}>
             {this.renderHeader()}
@@ -179,11 +195,11 @@ export default class PermissionsIndex extends Component {
   }
 }
 
-// TODO: Maybe we don't need this, since there are no props coming from state?
 function mapStateToProps(state, ownProps) {
   return {
     ...ownProps,
-    roles: state.roles
+    roles: state.roles,
+    selectedRoles: state.selectedRoles
   }
 }
 

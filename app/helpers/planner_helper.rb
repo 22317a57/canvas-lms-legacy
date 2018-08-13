@@ -56,4 +56,81 @@ module PlannerHelper
   def require_planner_enabled
     render json: { message: "Feature disabled" }, status: :forbidden unless @domain_root_account.feature_enabled?(:student_planner)
   end
+
+  def sync_module_requirement_done(item, user, complete)
+    return unless item.is_a?(ContextModuleItem)
+    doneable = mark_doneable_tag(item)
+    return unless doneable
+    if complete
+      doneable.context_module_action(user, :done)
+    else
+      progression = doneable.progression_for_user(user)
+      if progression&.requirements_met&.find {|req| req[:id] == doneable.id && req[:type] == "must_mark_done" }
+        progression.uncomplete_requirement(doneable.id)
+        progression.evaluate
+      end
+    end
+  end
+
+  def sync_planner_completion(item, user, complete)
+    return unless item.is_a?(ContextModuleItem) && item.is_a?(Plannable)
+    return unless mark_doneable_tag(item)
+    planner_override = PlannerOverride.where(user: user, plannable_id: item.id,
+                                             plannable_type: item.class.to_s).first_or_create
+    planner_override.marked_complete = complete
+    planner_override.dismissed = complete
+    planner_override.save
+    Rails.cache.delete(planner_meta_cache_key)
+    planner_override
+  end
+
+  def complete_planner_override_for_submission(submission)
+    planner_override = find_planner_override_for_submission(submission)
+    if planner_override
+      planner_override.marked_complete = true
+      if planner_override.save
+        Rails.cache.delete(planner_meta_cache_key)
+      end
+    end
+  end
+
+
+  private
+  def mark_doneable_tag(item)
+    doneable_tags = item.context_module_tags.select do |tag|
+      tag.context_module.completion_requirements.find do |req|
+        req[:id] == tag.id && req[:type] == "must_mark_done"
+      end
+    end
+    doneable_tags.length == 1 ? doneable_tags.first : nil
+  end
+
+  # until the graded objects are handled more uniformly,
+  # we have to look around for an associated override
+  def find_planner_override_for_submission(submission)
+    return unless submission&.respond_to?(:submission_type) && submission&.respond_to?(:assignment_id)
+
+    planner_override = case submission.submission_type
+      when "discussion_topic"
+        discussion_topic_id = DiscussionTopic.find_by(assignment_id: submission.assignment_id)&.id
+        PlannerOverride.find_by(
+          plannable_id: discussion_topic_id,
+          plannable_type: PLANNABLE_TYPES['discussion_topic'],
+          user_id: submission.user_id
+        )
+      when "online_quiz"
+        quiz_id = Quizzes::Quiz.find_by(assignment_id: submission.assignment_id)&.id
+        PlannerOverride.find_by(
+          plannable_id: quiz_id,
+          plannable_type: PLANNABLE_TYPES['quiz'],
+          user_id: submission.user_id
+        )
+    end
+    planner_override ||= PlannerOverride.find_by(
+      plannable_id: submission.assignment_id,
+      plannable_type: PLANNABLE_TYPES['assignment'],
+      user_id: submission.user_id
+    )
+    planner_override
+  end
 end

@@ -54,7 +54,7 @@ describe DeveloperKeysController do
           it 'sets the scopes to empty' do
             dk = DeveloperKey.create!
             get 'index', params: { account_id: Account.site_admin.id, format: :json}
-            expect(response).to be_success
+            expect(response).to be_successful
             developer_key = json_parse(response.body).first
             expect(developer_key['scopes']).to eq( [] )
           end
@@ -63,7 +63,7 @@ describe DeveloperKeysController do
         it 'should return the list of developer keys' do
           dk = DeveloperKey.create!
           get 'index', params: { account_id: Account.site_admin.id }
-          expect(response).to be_success
+          expect(response).to be_successful
           expect(assigns[:keys]).to be_include(dk)
         end
 
@@ -74,7 +74,7 @@ describe DeveloperKeysController do
             Setting.remove(Setting::SITE_ADMIN_ACCESS_TO_NEW_DEV_KEY_FEATURES)
             get 'index', params: { account_id: Account.site_admin.id }
             expect(response).to render_template(:index)
-            expect(response).to be_success
+            expect(response).to be_successful
           end
         end
 
@@ -82,7 +82,7 @@ describe DeveloperKeysController do
           dk = DeveloperKey.create!
           dk.destroy
           get 'index', params: { account_id: Account.site_admin.id }
-          expect(response).to be_success
+          expect(response).to be_successful
           expect(assigns[:keys]).not_to be_include(dk)
         end
 
@@ -90,7 +90,7 @@ describe DeveloperKeysController do
           dk = DeveloperKey.create!
           dk.deactivate!
           get 'index', params: { account_id: Account.site_admin.id }
-          expect(response).to be_success
+          expect(response).to be_successful
           expect(assigns[:keys]).to be_include(dk)
         end
 
@@ -117,7 +117,7 @@ describe DeveloperKeysController do
           before do
             site_admin_key
             root_account_key
-            test_domain_root_account.enable_feature!(:developer_key_management_ui_rewrite)
+            test_domain_root_account.enable_feature!(:developer_key_management_and_scoping)
           end
 
           context 'on site_admin account' do
@@ -165,7 +165,7 @@ describe DeveloperKeysController do
         post "create", params: create_params
 
         json_data = JSON.parse(response.body)
-        expect(response).to be_success
+        expect(response).to be_successful
         key = DeveloperKey.find(json_data['id'])
         expect(key.account).to be nil
       end
@@ -179,10 +179,8 @@ describe DeveloperKeysController do
         let(:root_account) { account_model }
 
         before do
-          Account.site_admin.allow_feature!(:api_token_scoping)
-          allow_any_instance_of(Account).to receive(:feature_enabled?).with(:api_token_scoping).and_return(true)
-          allow_any_instance_of(Account).to receive(:feature_enabled?).with(:developer_key_management_ui_rewrite).and_return(true)
-
+          Account.site_admin.allow_feature!(:developer_key_management_and_scoping)
+          allow_any_instance_of(Account).to receive(:feature_enabled?).with(:developer_key_management_and_scoping).and_return(true)
           user_session(@admin)
         end
 
@@ -202,8 +200,8 @@ describe DeveloperKeysController do
           end.not_to change(DeveloperKey, :count)
         end
 
-        it 'does not set scopes if the "developer_key_management_ui_rewrite" flag is disabled' do
-          allow_any_instance_of(Account).to receive(:feature_enabled?).with(:developer_key_management_ui_rewrite).and_return(false)
+        it 'does not set scopes if the "developer_key_management_and_scoping" flag is disabled' do
+          allow_any_instance_of(Account).to receive(:feature_enabled?).with(:developer_key_management_and_scoping).and_return(false)
           post 'create', params: { account_id: root_account.id, developer_key: { scopes: valid_scopes } }
           expect(DeveloperKey.find(json_parse['id']).scopes).to be_blank
         end
@@ -217,7 +215,7 @@ describe DeveloperKeysController do
 
         dk = DeveloperKey.create!
         put 'update', params: {id: dk.id, developer_key: { event: :deactivate }, account_id: Account.site_admin.id}
-        expect(response).to be_success
+        expect(response).to be_successful
         expect(dk.reload.state).to eq :inactive
       end
 
@@ -227,7 +225,7 @@ describe DeveloperKeysController do
         dk = DeveloperKey.create!
         dk.deactivate!
         put 'update', params: {id: dk.id, developer_key: { event: :activate }, account_id: Account.site_admin.id}
-        expect(response).to be_success
+        expect(response).to be_successful
         expect(dk.reload.state).to eq :active
       end
 
@@ -242,8 +240,7 @@ describe DeveloperKeysController do
         let(:site_admin_key) { DeveloperKey.create! }
 
         before do
-          allow_any_instance_of(Account).to receive(:feature_enabled?).with(:api_token_scoping).and_return(true)
-          allow_any_instance_of(Account).to receive(:feature_enabled?).with(:developer_key_management_ui_rewrite).and_return(true)
+          allow_any_instance_of(Account).to receive(:feature_enabled?).with(:developer_key_management_and_scoping).and_return(true)
           user_session(@admin)
         end
 
@@ -267,8 +264,8 @@ describe DeveloperKeysController do
           expect(developer_key.reload.scopes).to be_blank
         end
 
-        it 'does not set scopes if the "developer_key_management_ui_rewrite" flag is disabled' do
-          allow_any_instance_of(Account).to receive(:feature_enabled?).with(:developer_key_management_ui_rewrite).and_return(false)
+        it 'does not set scopes if the "developer_key_management_and_scoping" flag is disabled' do
+          allow_any_instance_of(Account).to receive(:feature_enabled?).with(:developer_key_management_and_scoping).and_return(false)
           put 'update', params: { id: developer_key.id, developer_key: { scopes: valid_scopes } }
           expect(developer_key.reload.scopes).to be_blank
         end
@@ -286,7 +283,7 @@ describe DeveloperKeysController do
 
         dk = DeveloperKey.create!
         delete 'destroy', params: {id: dk.id, account_id: Account.site_admin.id}
-        expect(response).to be_success
+        expect(response).to be_successful
         expect(dk.reload.state).to eq :deleted
       end
     end
@@ -306,7 +303,7 @@ describe DeveloperKeysController do
         site_admin_key
         root_account_key
         allow_any_instance_of(Account).to receive(:feature_enabled?).and_return(false)
-        allow_any_instance_of(Account).to receive(:feature_enabled?).with(:developer_key_management_ui_rewrite).and_return(true)
+        allow_any_instance_of(Account).to receive(:feature_enabled?).with(:developer_key_management_and_scoping).and_return(true)
       end
 
       it 'responds with not found if the account is a sub account' do
@@ -386,7 +383,7 @@ describe DeveloperKeysController do
 
     it 'Should be allowed to access their dev keys' do
       get 'index', params: {account_id: test_domain_root_account.id}
-      expect(response).to be_success
+      expect(response).to be_successful
     end
 
     it "An account admin shouldn't be able to access site admin dev keys" do
@@ -415,7 +412,7 @@ describe DeveloperKeysController do
 
       it 'should be allowed to create a dev key' do
         post "create", params: create_params
-        expect(response).to be_success
+        expect(response).to be_successful
       end
 
       it 'should be dev keys plus 1 key' do
@@ -429,7 +426,7 @@ describe DeveloperKeysController do
       put 'update', params: {id: dk.id, developer_key: {
           redirect_uri: "http://example.com/sdf"
         }}
-      expect(response).to be_success
+      expect(response).to be_successful
       dk.reload
       expect(dk.redirect_uri).to eq("http://example.com/sdf")
 

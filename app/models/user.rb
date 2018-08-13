@@ -32,6 +32,7 @@ class User < ActiveRecord::Base
   include Context
   include ModelCache
   include UserLearningObjectScopes
+  include PermissionsHelper
 
   attr_accessor :previous_id, :menu_data, :gradebook_importer_submissions, :prior_enrollment
 
@@ -270,7 +271,7 @@ class User < ActiveRecord::Base
   def self.order_by_sortable_name(options = {})
     clause = sortable_name_order_by_clause
     sort_direction = options[:direction] == :descending ? 'DESC' : 'ASC'
-    scope = self.order("#{clause} #{sort_direction}").order("#{self.table_name}.id #{sort_direction}")
+    scope = self.order(Arel.sql("#{clause} #{sort_direction}")).order(Arel.sql("#{self.table_name}.id #{sort_direction}"))
     if scope.select_values.empty?
       scope = scope.select(self.arel_table[Arel.star])
     end
@@ -899,7 +900,7 @@ class User < ActiveRecord::Base
   def delete_enrollments(enrollment_scope=self.enrollments)
     courses_to_update = enrollment_scope.active.distinct.pluck(:course_id)
     Enrollment.suspend_callbacks(:set_update_cached_due_dates) do
-      enrollment_scope.each{ |e| e.destroy }
+      enrollment_scope.preload(:course, :enrollment_state).each{ |e| e.destroy }
     end
     user_ids = enrollment_scope.pluck(:user_id).uniq
     courses_to_update.each do |course|
@@ -1044,7 +1045,7 @@ class User < ActiveRecord::Base
     can :read and can :read_grades and can :read_profile and can :read_as_admin and can :manage and
       can :manage_content and can :manage_files and can :manage_calendar and can :send_messages and
       can :update_avatar and can :manage_feature_flags and can :api_show_user and
-      can :read_email_addresses and can :view_user_logins
+      can :read_email_addresses and can :view_user_logins and can :generate_observer_pairing_code
 
     given { |user| user == self && user.user_can_edit_name? }
     can :rename
@@ -1060,6 +1061,9 @@ class User < ActiveRecord::Base
 
     given { |user| self.check_courses_right?(user, :manage_user_notes) }
     can :create_user_notes and can :read_user_notes
+
+    given { |user| self.check_courses_right?(user, :generate_observer_pairing_code) }
+    can :generate_observer_pairing_code
 
     given {|user| self.check_accounts_right?(user, :manage_user_notes) }
     can :create_user_notes and can :read_user_notes and can :delete_user_notes
@@ -1486,22 +1490,6 @@ class User < ActiveRecord::Base
 
   def use_new_conversations?
     true
-  end
-
-  def generate_access_verifier(ts)
-    require 'openssl'
-    digest = OpenSSL::Digest::MD5.new
-    OpenSSL::HMAC.hexdigest(digest, uuid, ts.to_s)
-  end
-
-  private :generate_access_verifier
-  def access_verifier
-    ts = Time.now.utc.to_i
-    [ts, generate_access_verifier(ts)]
-  end
-
-  def valid_access_verifier?(ts, sig)
-    ts.to_i > 5.minutes.ago.to_i && ts.to_i < 1.minute.from_now.to_i && sig == generate_access_verifier(ts.to_i)
   end
 
   def uuid
@@ -2069,17 +2057,23 @@ class User < ActiveRecord::Base
   end
 
   def manageable_appointment_context_codes
-    @manageable_appointment_context_codes ||= Rails.cache.fetch([self, 'cached_manageable_appointment_codes', ApplicationController.region ].cache_key, expires_in: 1.day) do
+    cache_key = [self, 'cached_manageable_appointment_codes', ApplicationController.region ].cache_key
+    @manageable_appointment_context_codes ||= Rails.cache.fetch(cache_key, expires_in: 1.day) do
       ret = {:full => [], :limited => [], :secondary => []}
-      cached_current_enrollments(preload_courses: true).each do |e|
-        next unless e.course.grants_right?(self, :manage_calendar)
-        if e.course.visibility_limited_to_course_sections?(self)
+      limited_sections = {}
+      manageable_enrollments_by_permission(:manage_calendar).each do |e|
+        next if ret[:full].include?("course_#{e.course_id}")
+        if e.limit_privileges_to_course_section
           ret[:limited] << "course_#{e.course_id}"
-          ret[:secondary] << "course_section_#{e.course_section_id}"
+          limited_sections[e.course_id] ||= []
+          limited_sections[e.course_id] << "course_section_#{e.course_section_id}"
         else
+          ret[:limited].delete("course_#{e.course_id}")
+          limited_sections.delete(e.course_id)
           ret[:full] << "course_#{e.course_id}"
         end
       end
+      ret[:secondary] = limited_sections.values.flatten
       ret
     end
   end
@@ -2858,6 +2852,6 @@ class User < ActiveRecord::Base
   end
 
   def generate_observer_pairing_code
-    observer_pairing_codes.create(expires_at: 1.day.from_now, code: SecureRandom.hex(3))
+    observer_pairing_codes.create(expires_at: 7.days.from_now, code: SecureRandom.base64().gsub(/\W/, '')[0..5])
   end
 end

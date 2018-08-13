@@ -278,6 +278,7 @@ class RoleOverridesController < ApplicationController
   #     read_forum                       -- [STADO] View discussions
   #     moderate_forum                   -- [sTADo] Moderate discussions (delete/edit others' posts, lock topics)
   #     post_to_forum                    -- [STADo] Post to discussions
+  #     create_forum                     -- [STADo] Create discussions
   #     read_announcements               -- [STADO] View announcements
   #     read_question_banks              -- [ TADo] View and link to question banks
   #     read_reports                     -- [ TAD ] View usage reports for the course
@@ -290,7 +291,7 @@ class RoleOverridesController < ApplicationController
   #     lti_add_edit                     -- [ TAD ] LTI add and edit
   #     read_email_addresses             -- [sTAdo] See other users' primary email address
   #     view_user_logins                 -- [ TA  ] View login ids for users
-  #
+  #     generate_observer_pairing_code   -- [ tAdo] Allow observer pairing code generation
   #
   #   Some of these permissions are applicable only for roles on the site admin
   #   account, on a root account, or for course-level roles with a particular base role type;

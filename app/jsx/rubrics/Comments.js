@@ -18,7 +18,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import Text from '@instructure/ui-core/lib/components/Text'
+import Text from '@instructure/ui-elements/lib/components/Text'
 import Checkbox from '@instructure/ui-forms/lib/components/Checkbox'
 import Select from '@instructure/ui-forms/lib/components/Select'
 import TextArea from '@instructure/ui-forms/lib/components/TextArea'
@@ -89,9 +89,11 @@ const commentElement = (assessment) => (
 )
 
 export const CommentText = ({ assessment, placeholder, weight }) => (
-  <Text size="x-small" weight={weight}>
-    {assessment !== null ? commentElement(assessment) : placeholder}
-  </Text>
+  <span className="react-rubric-break-words">
+    <Text size="x-small" weight={weight}>
+      {assessment !== null ? commentElement(assessment) : placeholder}
+    </Text>
+  </span>
 )
 CommentText.propTypes = {
   assessment: PropTypes.shape(assessmentShape),
@@ -104,7 +106,7 @@ CommentText.defaultProps = {
 }
 
 const Comments = (props) => {
-  const { assessing, assessment, ...commentProps } = props
+  const { assessing, assessment, footer, ...commentProps } = props
   if (!assessing || assessment === null) {
     return (
       <div className="rubric-freeform">
@@ -113,6 +115,7 @@ const Comments = (props) => {
           placeholder={I18n.t("This area will be used by the assessor to leave comments related to this criterion.")}
           weight="normal"
         />
+        {footer}
       </div>
     )
   }
@@ -129,9 +132,13 @@ const Comments = (props) => {
 Comments.propTypes = {
   assessing: PropTypes.bool.isRequired,
   assessment: PropTypes.shape(assessmentShape),
+  footer: PropTypes.node,
   savedComments: PropTypes.arrayOf(PropTypes.string).isRequired,
   setComments: PropTypes.func.isRequired,
   setSaveLater: PropTypes.func.isRequired
+}
+Comments.defaultProps = {
+  footer: null
 }
 
 export default Comments

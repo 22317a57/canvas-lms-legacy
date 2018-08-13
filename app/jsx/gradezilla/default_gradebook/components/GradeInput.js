@@ -100,9 +100,32 @@ function CompleteIncompleteSelect (props) {
   );
 }
 
+function stateFromProps (props) {
+  let normalizedGrade;
+
+  if (props.enterGradesAs === 'passFail') {
+    normalizedGrade = props.assignment.anonymizeStudents ? null : props.submission.enteredGrade;
+  } else {
+    const propsCopy = { ...props };
+
+    if (props.assignment.anonymizeStudents) {
+      const submission = { ...props.submission, enteredScore: null };
+      propsCopy.submission = submission;
+    }
+
+    normalizedGrade = normalizeSubmissionGrade(propsCopy);
+  }
+
+  return {
+    formattedGrade: normalizedGrade,
+    grade: normalizedGrade
+  };
+}
+
 export default class GradeInput extends React.Component {
   static propTypes = {
     assignment: shape({
+      anonymizeStudents: bool.isRequired,
       gradingType: oneOf(['gpa_scale', 'letter_grade', 'not_graded', 'pass_fail', 'points', 'percent']).isRequired,
       pointsPossible: number
     }).isRequired,
@@ -134,21 +157,12 @@ export default class GradeInput extends React.Component {
   constructor (props) {
     super(props);
 
-    let normalizedGrade = normalizeSubmissionGrade(props);
-
-    if (props.enterGradesAs === 'passFail') {
-      normalizedGrade = props.submission.enteredGrade
-    }
-
-    this.state = {
-      formattedGrade: normalizedGrade,
-      grade: normalizedGrade
-    };
-
     this.handleSelectChange = this.handleSelectChange.bind(this);
     this.handleTextChange = this.handleTextChange.bind(this);
     this.handleTextBlur = this.handleTextBlur.bind(this);
     this.handleGradeChange = this.handleGradeChange.bind(this);
+
+    this.state = stateFromProps(props);
   }
 
   componentWillReceiveProps (nextProps) {
@@ -156,16 +170,7 @@ export default class GradeInput extends React.Component {
     const submissionUpdated = this.props.submissionUpdating && !nextProps.submissionUpdating;
 
     if (submissionChanged || submissionUpdated) {
-      let normalizedGrade = normalizeSubmissionGrade(nextProps);
-
-      if (nextProps.enterGradesAs === 'passFail') {
-        normalizedGrade = nextProps.submission.enteredGrade;
-      }
-
-      this.setState({
-        formattedGrade: normalizedGrade,
-        grade: normalizedGrade
-      });
+      this.setState(stateFromProps(nextProps));
     }
   }
 

@@ -16,6 +16,7 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 import * as Actions from '../index';
+import * as SidebarActions from '../sidebar-actions';
 import moxios from 'moxios';
 import moment from 'moment-timezone';
 import {isPromise, moxiosWait, moxiosRespond} from '../../test-utils';
@@ -74,6 +75,7 @@ describe('api actions', () => {
 
   afterEach(() => {
     moxios.uninstall();
+    SidebarActions.maybeUpdateTodoSidebar.reset();
   });
 
   describe('getNextOpportunities', () => {
@@ -222,6 +224,24 @@ describe('api actions', () => {
     });
   });
 
+  it('calls the alert function when dismissing an opportunity fails', (done) => {
+    const mockDispatch = jest.fn();
+    const fakeAlert = jest.fn();
+    alertInitialize({
+      visualErrorCallback: fakeAlert
+    });
+    Actions.dismissOpportunity("6", {id: "6"})(() => {});
+    moxios.wait(() => {
+      let request = moxios.requests.mostRecent();
+      request.respondWith({
+        status: 400,
+      }).then(() => {
+        expect(fakeAlert).toHaveBeenCalled();
+        done();
+      });
+    })
+  });
+
   it('calls the alert function when a failure occurs', (done) => {
     const mockDispatch = jest.fn();
     const fakeAlert = jest.fn();
@@ -365,7 +385,7 @@ describe('api actions', () => {
   });
 
   describe('deletePlannerItem', () => {
-    it('dispatches deleting, clearUpdateTodo, and deleted actions', () => {
+    it('dispatches deleting, clearUpdateTodo, deleted, and maybe update sidebar actions', () => {
       const mockDispatch = jest.fn();
       const plannerItem = simpleItem();
       const deletePromise = Actions.deletePlannerItem(plannerItem)(mockDispatch, getBasicState);
@@ -373,6 +393,7 @@ describe('api actions', () => {
       expect(mockDispatch).toHaveBeenCalledWith({type: 'DELETING_PLANNER_ITEM', payload: plannerItem});
       expect(mockDispatch).toHaveBeenCalledWith({type: 'CLEAR_UPDATE_TODO'});
       expect(mockDispatch).toHaveBeenCalledWith({type: 'DELETED_PLANNER_ITEM', payload: deletePromise});
+      expect(mockDispatch).toHaveBeenCalledWith(SidebarActions.maybeUpdateTodoSidebar);
     });
 
     it('sends a delete request for the item id', () => {
@@ -416,7 +437,7 @@ describe('api actions', () => {
   });
 
   describe('togglePlannerItemCompletion', () => {
-    it('dispatches saving and saved actions', () => {
+    it('dispatches saving, saved, and maybe update sidebar actions', () => {
       const mockDispatch = jest.fn();
       const plannerItem = simpleItem();
       const savingItem = {...plannerItem, show: true, toggleAPIPending: true};
@@ -424,9 +445,11 @@ describe('api actions', () => {
       expect(isPromise(savePromise)).toBe(true);
       expect(mockDispatch).toHaveBeenCalledWith({type: 'SAVING_PLANNER_ITEM', payload: {item: savingItem, isNewItem: false, wasToggled: true}});
       expect(mockDispatch).toHaveBeenCalledWith({type: 'SAVED_PLANNER_ITEM', payload: savePromise});
+      expect(mockDispatch).toHaveBeenCalledWith(SidebarActions.maybeUpdateTodoSidebar);
+      expect(SidebarActions.maybeUpdateTodoSidebar.args()).toEqual([savePromise]);
     });
 
-    it ('updates marked_complete and sends override data in the request', () => {
+    it('updates marked_complete and sends override data in the request', () => {
       const mockDispatch = jest.fn();
       const plannerItem = simpleItem({marked_complete: null});
       Actions.togglePlannerItemCompletion(plannerItem)(mockDispatch, getBasicState);

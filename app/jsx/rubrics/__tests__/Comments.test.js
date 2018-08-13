@@ -20,12 +20,12 @@ import React from 'react'
 import { shallow } from 'enzyme'
 import Comments from '../Comments'
 
-import { freeFormAssessment } from './fixtures'
+import { assessments } from './fixtures'
 
 describe('The Comments component', () => {
   const props = {
     assessing: true,
-    assessment: freeFormAssessment.data[1],
+    assessment: assessments.freeForm.data[1],
     savedComments: [
       'I award you no points',
       'May god have mercy on your soul'
@@ -73,5 +73,11 @@ describe('The Comments component', () => {
     el.find('Checkbox').prop('onChange')({ target: { checked: true } })
 
     expect(setSaveLater.args).toEqual([[true]])
+  })
+
+  it('renders a footer after the comment when provided', () => {
+    const el = component({ assessing: false, footer: <div>this is a footer</div> })
+
+    expect(el.shallow().debug()).toMatchSnapshot()
   })
 })

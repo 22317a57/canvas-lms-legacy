@@ -21,15 +21,35 @@ import PropTypes from 'prop-types'
 import React from 'react'
 
 import Button from '@instructure/ui-buttons/lib/components/Button'
-import Container from '@instructure/ui-core/lib/components/Container'
-import Heading from '@instructure/ui-core/lib/components/Heading'
+import Container from '@instructure/ui-layout/lib/components/View'
+import Heading from '@instructure/ui-elements/lib/components/Heading'
 import IconX from '@instructure/ui-icons/lib/Solid/IconX'
 import Tray from '@instructure/ui-overlays/lib/components/Tray'
 
 import actions from '../actions'
 import RoleTrayTable from './RoleTrayTable'
 import RoleTrayTableRow from './RoleTrayTableRow'
-import permissionPropTypes from '../propTypes'
+import permissionPropTypes, {COURSE} from '../propTypes'
+
+import DetailsToggle from './DetailsToggle'
+import {
+  PERMISSION_DETAILS_COURSE_TEMPLATES,
+  PERMISSION_DETAILS_ACCOUNT_TEMPLATES,
+  PERMISSION_DETAIL_SECTIONS
+} from '../templates'
+
+function renderPermissionDetailToggles(tab, permissionName) {
+  return PERMISSION_DETAIL_SECTIONS.map(PDS => (
+    <DetailsToggle
+      title={PDS.title}
+      detailItems={
+        tab === COURSE
+          ? PERMISSION_DETAILS_COURSE_TEMPLATES[PDS.key][permissionName] || []
+          : PERMISSION_DETAILS_ACCOUNT_TEMPLATES[PDS.key][permissionName] || []
+      }
+    />
+  ))
+}
 
 // TODO don't pass in label if we are passing in permission
 export default function PermissionTray(props) {
@@ -41,7 +61,13 @@ export default function PermissionTray(props) {
       size="small"
       placement="end"
     >
-      <Button variant="icon" size="small" margin="small 0 0 xx-small" onClick={props.hideTray}>
+      <Button
+        id="close"
+        variant="icon"
+        size="small"
+        margin="small 0 0 xx-small"
+        onClick={props.hideTray}
+      >
         <IconX title={I18n.t('Close')} />
       </Button>
 
@@ -49,7 +75,7 @@ export default function PermissionTray(props) {
         <Heading level="h3" as="h2" margin="0 0 medium 0">
           {props.label}
         </Heading>
-
+        {renderPermissionDetailToggles(props.tab, props.permissionName)}
         {props.assignedRoles.length !== 0 && (
           <RoleTrayTable title={I18n.t('Assigned Roles')}>
             {props.assignedRoles.map(role => (
@@ -59,14 +85,13 @@ export default function PermissionTray(props) {
                 description=""
                 expandable={false}
                 permissionName={props.permissionName}
+                permissionLabel={props.label}
                 permission={role.permissions[props.permissionName]}
                 role={role}
-                trayIcon
               />
             ))}
           </RoleTrayTable>
         )}
-
         {props.unassignedRoles.length !== 0 && (
           <RoleTrayTable title={I18n.t('Unassigned Roles')}>
             {props.unassignedRoles.map(role => (
@@ -76,9 +101,9 @@ export default function PermissionTray(props) {
                 description=""
                 expandable={false}
                 permissionName={props.permissionName}
+                permissionLabel={props.label}
                 permission={role.permissions[props.permissionName]}
                 role={role}
-                trayIcon
               />
             ))}
           </RoleTrayTable>
@@ -94,7 +119,8 @@ PermissionTray.propTypes = {
   label: PropTypes.string.isRequired,
   open: PropTypes.bool.isRequired,
   unassignedRoles: PropTypes.arrayOf(permissionPropTypes.role).isRequired,
-  permissionName: PropTypes.string.isRequired
+  permissionName: PropTypes.string.isRequired,
+  tab: PropTypes.string.isRequired
 }
 
 function mapStateToProps(state, ownProps) {
@@ -103,7 +129,8 @@ function mapStateToProps(state, ownProps) {
       assignedRoles: [],
       label: '',
       open: false,
-      unassignedRoles: []
+      unassignedRoles: [],
+      tab: ownProps.tab || COURSE
     }
     return {...stateProps, ...ownProps}
   }
@@ -119,7 +146,8 @@ function mapStateToProps(state, ownProps) {
     permissionName,
     label: permission.label,
     open: true,
-    unassignedRoles: displayedRoles.filter(r => !r.permissions[permissionName].enabled)
+    unassignedRoles: displayedRoles.filter(r => !r.permissions[permissionName].enabled),
+    tab: ownProps.tab || COURSE
   }
   return {...ownProps, ...stateProps}
 }

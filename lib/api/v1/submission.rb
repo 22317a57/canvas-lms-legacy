@@ -24,6 +24,7 @@ module Api::V1::Submission
   include Api::V1::Course
   include Api::V1::User
   include Api::V1::SubmissionComment
+  include CoursesHelper
 
   def submission_json(submission, assignment, current_user, session, context = nil, includes = [], params)
     context ||= assignment.context
@@ -92,6 +93,10 @@ module Api::V1::Submission
 
     if includes.include?('grading_status')
       hash['grading_status'] = submission.grading_status
+    end
+
+    if context.account_membership_allows(current_user)
+      hash['anonymous_id'] = submission.anonymous_id
     end
 
     hash
@@ -172,7 +177,10 @@ module Api::V1::Submission
                                  submission_attachment: true,
                                  include: includes,
                                  enable_annotations: true, # we want annotations on submission's attachment preview_urls
-                                 moderated_grading_whitelist: attempt.moderated_grading_whitelist)
+                                 moderated_grading_whitelist: attempt.moderated_grading_whitelist,
+                                 enrollment_type: user_type(context, user),
+                                 anonymous_instructor_annotations: assignment.anonymous_instructor_annotations?
+                                )
         attachment.skip_submission_attachment_lock_checks = false
         atjson
       end.compact unless attachments.blank?
@@ -252,7 +260,7 @@ module Api::V1::Submission
     attachment = attachments.pop
     attachments.each(&:destroy_permanently_plus)
 
-    anonymous = assignment.context.feature_enabled?(:anonymous_grading)
+    anonymous = assignment.anonymize_students?
 
     # Remove the earlier attachment and re-create it if it's "stale"
     if attachment

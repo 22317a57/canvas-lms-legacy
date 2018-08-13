@@ -56,9 +56,8 @@ class ObserverAlert < ActiveRecord::Base
 
   def self.create_assignment_missing_alerts
     submissions = Submission.active.
-      preload(user: :as_student_observer_alert_thresholds).
-      joins(:assignment).
-      joins("INNER JOIN #{ObserverAlertThreshold.quoted_table_name} observer_alert_thresholds ON observer_alert_thresholds.user_id = submissions.user_id AND observer_alert_thresholds.workflow_state <> 'deleted'").
+      eager_load(:assignment, user: :as_student_observer_alert_thresholds).
+      where("observer_alert_thresholds.user_id = submissions.user_id").
       joins("LEFT OUTER JOIN #{ObserverAlert.quoted_table_name} ON observer_alerts.context_id = submissions.id
              AND observer_alerts.context_type = 'Submission'
              AND observer_alerts.alert_type = 'assignment_missing'").
@@ -66,13 +65,15 @@ class ObserverAlert < ActiveRecord::Base
       missing.
       merge(Assignment.submittable).
       where('cached_due_date > ?', 1.day.ago).
-      where("observer_alerts.id IS NULL").
-      where("observer_alert_thresholds.alert_type = 'assignment_missing'")
+      where("observer_alerts.id IS NULL")
 
-      alerts = []
-      submissions.find_each do |submission|
-        threshold = submission.user.as_student_observer_alert_thresholds.first
+    alerts = []
+    submissions.find_each do |submission|
+      thresholds = submission.user.as_student_observer_alert_thresholds.
+        where(alert_type: 'assignment_missing')
+      thresholds.find_each do |threshold|
         next unless threshold.users_are_still_linked?
+        next unless threshold.observer.enrollments.where(course_id: submission.assignment.context_id).first.present?
 
         now = Time.now.utc
         alerts << { observer_id: threshold.observer.id,
@@ -84,14 +85,15 @@ class ObserverAlert < ActiveRecord::Base
                     created_at: now,
                     updated_at: now,
                     action_date: now,
-                    title: I18n.t('Assignment missing: %{assignment_name} in %{course_name}', {
+                    title: I18n.t('Assignment missing: %{assignment_name} in %{course_code}', {
                       assignment_name: submission.assignment.title,
-                      course_name: submission.assignment.course.name
+                      course_code: submission.assignment.course.course_code
                     }) }
       end
+    end
 
-      alerts.each_slice(1000) do |slice|
-        ObserverAlert.bulk_insert(slice)
-      end
+    alerts.each_slice(1000) do |slice|
+      ObserverAlert.bulk_insert(slice)
+    end
   end
 end

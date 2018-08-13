@@ -29,7 +29,10 @@ class DeveloperKeysController < ApplicationController
     respond_to do |format|
       format.html do
         set_navigation
-        js_env(accountEndpoint: api_v1_account_developer_keys_path(@context))
+        js_env(
+          accountEndpoint: api_v1_account_developer_keys_path(@context),
+          enableTestClusterChecks: DeveloperKey.test_cluster_checks_enabled?
+        )
 
         if use_new_dev_key_features?
           render :index_react
@@ -107,7 +110,7 @@ class DeveloperKeysController < ApplicationController
       requested_context = @context || account_from_params || @key&.owner_account
       return if requested_context.blank?
       has_site_admin_access?(requested_context) ||
-        requested_context.root_account.feature_enabled?(:developer_key_management_ui_rewrite)
+        requested_context.root_account.feature_enabled?(:developer_key_management_and_scoping)
     end
   end
 
@@ -138,8 +141,6 @@ class DeveloperKeysController < ApplicationController
   def developer_key_params
     if use_new_dev_key_features?
       return params.require(:developer_key).permit(
-        :access_token_count,
-        :api_key,
         :auto_expire_tokens,
         :email,
         :icon_url,
@@ -149,14 +150,13 @@ class DeveloperKeysController < ApplicationController
         :redirect_uris,
         :vendor_code,
         :visible,
+        :test_cluster_only,
         :require_scopes,
         scopes: []
       )
     end
 
     params.require(:developer_key).permit(
-      :access_token_count,
-      :api_key,
       :auto_expire_tokens,
       :email,
       :icon_url,

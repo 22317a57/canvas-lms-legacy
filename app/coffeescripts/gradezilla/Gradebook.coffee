@@ -234,7 +234,8 @@ define [
   class Gradebook
     columnWidths =
       assignment:
-        min: 214
+        min: 10
+        default_max: 200
         max: 400
       assignmentGroup:
         min: 35
@@ -1060,7 +1061,9 @@ define [
       @gradebookGrid.gridSupport.state.blur()
 
     sectionList: () ->
-      _.values(@sections).sort((a, b) => (a.id - b.id))
+      _.values(@sections)
+        .sort((a, b) => (a.id - b.id))
+        .map((section) => Object.assign({}, section, {name: htmlEscape.unescape(section.name)}))
 
     updateSectionFilterVisibility: () ->
       mountPoint = document.getElementById('sections-filter-container')
@@ -1186,7 +1189,6 @@ define [
         hasGradingPeriods: @gradingPeriodSet?
         selectedGradingPeriodID: @getGradingPeriodToShow()
         isAdmin: isAdmin()
-        anonymousModeratedMarkingEnabled: @options.anonymous_moderated_marking_enabled
 
     initPostGradesStore: ->
       @postGradesStore = PostGradesStore
@@ -1513,13 +1515,16 @@ define [
     # Assignment Column
 
     buildAssignmentColumn: (assignment) ->
+      shrinkForOutOfText = assignment && assignment.grading_type == 'points' && assignment.points_possible?
+      minWidth = if shrinkForOutOfText then 140 else 90
+
       columnId = @getAssignmentColumnId(assignment.id)
       fieldName = "assignment_#{assignment.id}"
 
       if @gradebookColumnSizeSettings && @gradebookColumnSizeSettings[fieldName]
         assignmentWidth = parseInt(@gradebookColumnSizeSettings[fieldName])
       else
-        assignmentWidth = columnWidths.assignment.min
+        assignmentWidth = testWidth(assignment.name, minWidth, columnWidths.assignment.default_max)
 
       columnDef =
         id: columnId
@@ -1535,6 +1540,10 @@ define [
         toolTip: assignment.name
         type: 'assignment'
         assignmentId: assignment.id
+
+      unless columnDef.width > columnDef.minWidth
+        columnDef.cssClass += ' minimized'
+        columnDef.headerCssClass += ' minimized'
 
       columnDef
 
@@ -2159,7 +2168,6 @@ define [
       submissionState = @submissionStateMap.getSubmissionState({ user_id: studentId, assignment_id: assignmentId })
       isGroupWeightZero = @assignmentGroups[assignment.assignment_group_id].group_weight == 0
 
-      anonymousModeratedMarkingEnabled: @options.anonymous_moderated_marking_enabled
       assignment: ConvertCase.camelize(assignment)
       colors: @getGridColors()
       comments: comments
@@ -2175,7 +2183,8 @@ define [
       isLastAssignment: isLastAssignment
       isFirstStudent: isFirstStudent
       isLastStudent: isLastStudent
-      isNotCountedForScore: assignment.omit_from_final_grade or isGroupWeightZero
+      isNotCountedForScore: assignment.omit_from_final_grade or
+                            (@options.group_weighting_scheme == 'percent' and isGroupWeightZero)
       isOpen: open
       key: "grade_details_tray"
       latePolicy: @courseContent.latePolicy
@@ -2681,8 +2690,7 @@ define [
       manager = new AssignmentMuterDialogManager(
         assignment,
         "#{@options.context_url}/assignments/#{assignmentId}/mute",
-        @contentLoadStates.submissionsLoaded,
-        @options.anonymous_moderated_marking_enabled
+        @contentLoadStates.submissionsLoaded
       )
 
       {

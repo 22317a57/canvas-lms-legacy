@@ -226,11 +226,13 @@ function scrollTo ($thing, time = 500) {
             if (info["points_possible"] != null) {
               data["points_possible_display"] = I18n.t('points_possible_short', '%{points} pts', {'points': I18n.n(info["points_possible"])});
             }
-            if (info["due_date"] != null) {
+            if (info["todo_date"] != null) {
+              data["due_date_display"] = $.dateString(info["todo_date"]);
+            } else if (info["due_date"] != null) {
               if (info["past_due"] != null) {
                 $context_module_item.data('past_due', true);
               }
-              data["due_date_display"] = $.dateString(info["due_date"])
+              data["due_date_display"] = $.dateString(info["due_date"]);
             } else if (info['has_many_overrides'] != null) {
               data["due_date_display"] = I18n.t("Multiple Due Dates");
             } else if (info["vdd_tooltip"] != null) {
@@ -1061,7 +1063,7 @@ function scrollTo ($thing, time = 500) {
         const contextId = response.data.context_module.context_id
         const modulesPage = `/courses/${contextId}/modules`
         axios.get(modulesPage).then((getResponse) => {
-          const $newContent = $(getResponse.data);
+          const $newContent = $(getResponse.data)
           const $newModule = $newContent.find(`#context_module_${newModuleId}`)
           $tempElement.remove()
           $newModule.insertAfter(duplicatedModuleElement)
@@ -1072,6 +1074,9 @@ function scrollTo ($thing, time = 500) {
           $('.delete_module_link').die()
           $('.duplicate_module_link').die()
           $('.add_module_link').die()
+          $('.edit_module_link').die()
+          $("#add_context_module_form .add_prerequisite_link").off()
+          $('#add_context_module_form .add_completion_criterion_link').off()
           $(".context_module").find(".expand_module_link,.collapse_module_link").bind('click keyclick', toggleModuleCollapse)
           modules.initModuleManagement()
         }).catch(showFlashError(I18n.t('Error rendering duplicated module')))
@@ -1368,8 +1373,8 @@ function scrollTo ($thing, time = 500) {
     })
 
     $(".edit_module_link").live('click', function(event) {
-      event.preventDefault();
-      modules.editModule($(this).parents(".context_module"));
+      event.preventDefault()
+      modules.editModule($(this).parents(".context_module"))
     });
 
     $(".add_module_link").live('click', function(event) {
@@ -1417,7 +1422,11 @@ function scrollTo ($thing, time = 500) {
               initNewItemPublishButton($item, data.content_tag);
               modules.updateAssignmentData();
 
-              $item.find('.lock-icon').data({moduleType: data.content_tag.type, contentId: data.content_tag.id});
+              $item.find('.lock-icon').data({
+                moduleType: data.content_tag.type,
+                contentId: data.content_tag.content_id,
+                moduleItemId: data.content_tag.id
+              });
               modules.loadMasterCourseData(data.content_tag.id);
             }), { onComplete: function() {
               $module.find('.add_module_item_link').focus();
@@ -1440,7 +1449,11 @@ function scrollTo ($thing, time = 500) {
           initNewItemPublishButton($item, data.content_tag)
           modules.updateAssignmentData()
 
-          $item.find('.lock-icon').data({moduleType: data.content_tag.type, contentId: data.content_tag.id})
+          $item.find('.lock-icon').data({
+            moduleType: data.content_tag.type,
+            contentId: data.content_tag.content_id,
+            moduleItemId: data.content_tag.id
+          });
           modules.loadMasterCourseData(data.content_tag.id)
 
           $module.find('.context_module_items.ui-sortable').sortable('disable')
@@ -2021,7 +2034,9 @@ function scrollTo ($thing, time = 500) {
     modules.updateAssignmentData(function() {
       modules.updateProgressions(function() {
         if (window.location.hash && !window.location.hash.startsWith('#!')) {
-          scrollTo($(window.location.hash))
+          try {
+            scrollTo($(window.location.hash))
+          } catch (error) {}
         } else {
           if ($(".context_module:first .content:visible").length == 0) {
             scrollTo($(".context_module .content:visible").filter(":first").parents(".context_module"))

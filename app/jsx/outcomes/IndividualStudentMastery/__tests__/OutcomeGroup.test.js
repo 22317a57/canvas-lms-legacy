@@ -25,6 +25,9 @@ const outcome = (id, title) => ({
   id,
   title,
   mastered: false,
+  mastery_points: 3,
+  points_possible: 5,
+  calculation_method: 'highest',
   ratings: [
     { description: 'My first rating' },
     { description: 'My second rating' }
@@ -33,9 +36,11 @@ const outcome = (id, title) => ({
     {
       id: 1,
       percent: 0.1,
-      alignment: {
+      assignment: {
+        id: 2,
+        name: 'My alignment',
         html_url: 'http://foo',
-        name: 'My alignment'
+        submission_types: ''
       }
     }
   ]
@@ -52,6 +57,9 @@ const defaultProps = (props = {}) => (
         id: 1,
         expansionId: 100,
         mastered: false,
+        mastery_points: 3,
+        points_possible: 5,
+        calculation_method: 'highest',
         ratings: [
           { description: 'My first rating' },
           { description: 'My second rating' }
@@ -86,7 +94,7 @@ it('renders the OutcomeGroup component', () => {
 describe('header', () => {
   it('includes the outcome group name', () => {
     const wrapper = shallow(<OutcomeGroup {...defaultProps()}/>)
-    const header = wrapper.find('ToggleDetails')
+    const header = wrapper.find('ToggleGroup')
     const summary = render(header.prop('summary'))
     expect(summary.text()).toMatch('My group')
   })

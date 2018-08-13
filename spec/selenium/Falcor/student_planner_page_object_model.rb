@@ -46,6 +46,13 @@ module PlannerPageObject
     expect(url).to eq(expected_url)
   end
 
+  def validate_submissions_url(object_type, object, submission)
+    url = driver.current_url
+    domain = url.split('courses')[0]
+    expected_url = domain + "courses/#{@course.id}/#{object_type}/#{object.id}/submissions/#{submission.id}"
+    expect(url).to eq(expected_url)
+  end
+
   def validate_calendar_url(object)
     url = driver.current_url
     domain = url.split('calendar')[0]
@@ -93,6 +100,11 @@ module PlannerPageObject
     object.is_a?(CalendarEvent) ? validate_calendar_url(object) : validate_url(url_type, object)
   end
 
+  def validate_link_to_submissions(object, submission, url_type)
+    navigate_to_course_object(object)
+    validate_submissions_url(url_type, object, submission)
+  end
+
   def view_todo_item
     @student_to_do = @student1.planner_notes.create!(todo_date: Time.zone.now,
                                                      title: "Student to do", course_id: @course.id)
@@ -121,6 +133,20 @@ module PlannerPageObject
                                                     assignment: assignment)
     discussion.discussion_entries.create!(user: @teacher,
                                            message: "new reply from teacher")
+  end
+
+  def discussion_index_page_detail
+    # might need to change when implementing
+    f('.todo-date')
+  end
+
+  def discussion_show_page_detail
+    # might need to change when implementing
+    f('.discussion-tododate')
+  end
+
+  def pages_detail
+    # Complete this while fixing ADMIN-1161
   end
 
   def open_opportunities_dropdown

@@ -17,7 +17,7 @@
  */
 
 import React from 'react'
-import {mount, shallow} from 'enzyme'
+import {shallow} from 'enzyme'
 
 import {ROLES} from '../../__tests__/examples'
 import PermissionTray from '../PermissionTray'
@@ -32,13 +32,6 @@ function makeDefaultProps() {
     unassignedRoles: ROLES.filter(r => r.id === '2')
   }
 }
-
-it('renders the component', () => {
-  const props = makeDefaultProps()
-  const tree = mount(<PermissionTray {...props} />)
-  const node = tree.find('PermissionTray')
-  expect(node.exists()).toBeTruthy()
-})
 
 it('renders the label', () => {
   const props = makeDefaultProps()
@@ -78,4 +71,12 @@ it('renders unassigned roles if any are present', () => {
   const node = tree.find('RoleTrayTable')
   expect(node.exists()).toBeTruthy()
   expect(node.props().title).toEqual('Unassigned Roles')
+})
+
+it('renders details toggles for permissions if any are present', () => {
+  const props = makeDefaultProps()
+  props.permissionName = 'manage_account_settings'
+  const tree = shallow(<PermissionTray {...props} />)
+  const node = tree.find('DetailsToggle')
+  expect(node.exists()).toBeTruthy()
 })

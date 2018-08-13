@@ -76,3 +76,8 @@ docker-compose.local.*
 
 # generated scopes markdown
 /doc/api/api_token_scopes.md
+
+# js coverage stuff
+.nyc_output
+coverage-jest
+coverage-karma

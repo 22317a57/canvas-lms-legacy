@@ -20,7 +20,9 @@ import { connect } from 'react-redux';
 import themeable from '@instructure/ui-themeable/lib';
 import Button from '@instructure/ui-buttons/lib/components/Button';
 import CloseButton from '@instructure/ui-buttons/lib/components/CloseButton';
+import ScreenReaderContent from '@instructure/ui-a11y/lib/components/ScreenReaderContent';
 import View from '@instructure/ui-layout/lib/components/View';
+import Portal from '@instructure/ui-portal/lib/components/Portal';
 import IconPlusLine from '@instructure/ui-icons/lib/Line/IconPlus';
 import IconAlertsLine from '@instructure/ui-icons/lib/Line/IconAlerts';
 import IconGradebookLine from '@instructure/ui-icons/lib/Line/IconGradebook';
@@ -32,6 +34,7 @@ import Badge from '@instructure/ui-elements/lib/components/Badge';
 import Opportunities from '../Opportunities';
 import GradesDisplay from '../GradesDisplay';
 import StickyButton from '../StickyButton';
+import { isFutureEmpty } from '../../utilities/statusUtils';
 
 import {
   addDay, savePlannerItem, deletePlannerItem, cancelEditingPlannerItem, openEditingPlannerItem, getNextOpportunities,
@@ -98,7 +101,8 @@ export class PlannerHeader extends Component {
       gradesLoaded: PropTypes.bool,
       gradesLoadingError: PropTypes.string,
     }).isRequired,
-    ariaHideElement: PropTypes.instanceOf(Element).isRequired
+    ariaHideElement: PropTypes.instanceOf(Element).isRequired,
+    auxElement: PropTypes.instanceOf(Element).isRequired
   };
 
   static defaultProps = {
@@ -126,13 +130,17 @@ export class PlannerHeader extends Component {
   componentWillReceiveProps(nextProps) {
     let opportunities = nextProps.opportunities.items.filter((opportunity) => this.isOpportunityVisible(opportunity));
 
-    if (!nextProps.loading.allOpportunitiesLoaded && !nextProps.loading.loadingOpportunities && opportunities.length < 10) {
+    if (!nextProps.loading.allOpportunitiesLoaded &&
+        !nextProps.loading.loadingOpportunities) {
       nextProps.getNextOpportunities();
     }
 
-    opportunities = opportunities.slice(0, 10);
-    this.setUpdateItemTray(!!nextProps.todo.updateTodoItem);
-    this.setState({opportunities});
+    if (this.props.todo.updateTodoItem !== nextProps.todo.updateTodoItem) {
+      this.setUpdateItemTray(!!nextProps.todo.updateTodoItem);
+    }
+    if (this.props.opportunities !== opportunities) {
+      this.setState({opportunities});
+    }
   }
 
   componentWillUpdate () {
@@ -147,26 +155,43 @@ export class PlannerHeader extends Component {
   }
 
   handleSavePlannerItem = (plannerItem) => {
-    this.toggleUpdateItemTray();
+    this.handleCloseTray();
     this.props.savePlannerItem(plannerItem);
   }
 
-  isOpportunityVisible = (opportunity) => {
-    if(this.state.dismissedTabSelected) {
-      return opportunity.planner_override ? opportunity.planner_override.dismissed : false;
-    } else {
-      return opportunity.planner_override ? !opportunity.planner_override.dismissed : true;
-    }
-  }
-
   handleDeletePlannerItem = (plannerItem) => {
-    this.toggleUpdateItemTray();
+    this.handleCloseTray();
     this.props.deletePlannerItem(plannerItem);
   }
 
-  handleCancelPlannerItem = () => {
-    this.toggleUpdateItemTray();
-    this.props.cancelEditingPlannerItem();
+  handleCloseTray = () => {
+    this.setUpdateItemTray(false);
+  }
+
+  handleToggleTray = () => {
+    if(this.state.trayOpen) {
+      this.handleCloseTray();
+    } else {
+      this.setUpdateItemTray(true);
+    }
+  }
+
+  // sets the tray open state and tells dynamic-ui what just happened
+  // via open/cancelEditingPlannerItem
+  setUpdateItemTray (trayOpen) {
+    if (trayOpen) {
+      if (this.props.openEditingPlannerItem) {
+        this.props.openEditingPlannerItem();  // tell dynamic-ui we've started editing
+      }
+    } else {
+      if (this.props.cancelEditingPlannerItem) {
+        this.props.cancelEditingPlannerItem();
+      }
+    }
+
+    this.setState({ trayOpen }, () => {
+      this.toggleAriaHiddenStuff(this.state.trayOpen);
+    });
   }
 
   toggleAriaHiddenStuff = (hide) => {
@@ -177,8 +202,12 @@ export class PlannerHeader extends Component {
     }
   }
 
-  toggleUpdateItemTray = () => {
-    this.setUpdateItemTray(!this.state.trayOpen);
+  isOpportunityVisible = (opportunity) => {
+    if(this.state.dismissedTabSelected) {
+      return opportunity.planner_override ? opportunity.planner_override.dismissed : false;
+    } else {
+      return opportunity.planner_override ? !opportunity.planner_override.dismissed : true;
+    }
   }
 
   toggleGradesTray = () => {
@@ -188,15 +217,6 @@ export class PlannerHeader extends Component {
       this.props.startLoadingGradesSaga();
     }
     this.setState({gradesTrayOpen: !this.state.gradesTrayOpen});
-  }
-
-  setUpdateItemTray (trayOpen) {
-    if (trayOpen && this.props.openEditingPlannerItem) {
-      this.props.openEditingPlannerItem();
-    }
-    this.setState({ trayOpen }, () => {
-      this.toggleAriaHiddenStuff(this.state.trayOpen);
-    });
   }
 
   handleTodayClick = () => {
@@ -269,27 +289,29 @@ export class PlannerHeader extends Component {
   }
 
   renderNewActivity () {
-    if (this.newActivityAboveView()) {
-      return (
+    return (
+      <Portal mountNode={this.props.auxElement} open={this.newActivityAboveView()}>
         <StickyButton
+          id="new_activity_button"
           direction="up"
-          hidden={true}
           onClick={this.handleNewActivityClick}
           zIndex={this.props.stickyZIndex}
           buttonRef={ref => this.newActivityButtonRef = ref}
           className="StickyButton-styles__newActivityButton"
+          description={formatMessage("Scrolls up to the previous item with new activity.")}
         >
           {formatMessage("New Activity")}
         </StickyButton>
-      );
-    }
+      </Portal>
+    );
   }
 
-  render () {
-    const verticalRoom = this.getPopupVerticalRoom();
-
-    return (
-      <div className={styles.root}>
+  renderToday () {
+    // if we're not displaying any items, don't show the today button
+    // this is true if the planner is completely empty, or showing the balloons
+    // because everything is in the past when first loaded
+    if (this.props.days.length > 0) {
+      return (
         <Button
           id="planner-today-btn"
           variant="light"
@@ -298,20 +320,33 @@ export class PlannerHeader extends Component {
         >
           {formatMessage("Today")}
         </Button>
+      );
+    }
+    return null;
+  }
+
+  render () {
+    const verticalRoom = this.getPopupVerticalRoom();
+
+    return (
+      <div className={styles.root}>
+        {this.renderToday()}
         <Button
           variant="icon"
+          icon={IconPlusLine}
           margin="0 medium 0 0"
-          onClick={this.toggleUpdateItemTray}
+          onClick={this.handleToggleTray}
           ref={(b) => { this.addNoteBtn = b; }}
         >
-          <IconPlusLine title={formatMessage("Add To Do")} />
+          <ScreenReaderContent>{formatMessage("Add To Do")}</ScreenReaderContent>
         </Button>
         <Button
           variant="icon"
+          icon={IconGradebookLine}
           margin="0 medium 0 0"
           onClick={this.toggleGradesTray}
         >
-          <IconGradebookLine title={formatMessage("Show My Grades")} />
+          <ScreenReaderContent>{formatMessage("Show My Grades")}</ScreenReaderContent>
         </Button>
         <Popover
           onDismiss={this.closeOpportunitiesDropdown}
@@ -328,8 +363,11 @@ export class PlannerHeader extends Component {
               ref={(b) => { this.opportunitiesButton = b; }}
               buttonRef={(b) => { this.opportunitiesHtmlButton = b; }}
             >
-              <Badge {...this.state.opportunities.length ? {count :this.state.opportunities.length} : {}}>
-                <IconAlertsLine title={this.opportunityTitle()} />
+              <Badge {...this.props.loading.allOpportunitiesLoaded && this.state.opportunities.length ? {count :this.state.opportunities.length} : {}}>
+                <View>
+                  <IconAlertsLine/>
+                  <ScreenReaderContent>{this.opportunityTitle()}</ScreenReaderContent>
+                </View>
               </Badge>
             </Button>
           </PopoverTrigger>
@@ -345,15 +383,16 @@ export class PlannerHeader extends Component {
           </PopoverContent>
         </Popover>
         <Tray
-          closeButtonLabel={formatMessage("Close")}
           open={this.state.trayOpen}
           label={this.getTrayLabel()}
           placement="end"
           shouldContainFocus={true}
           shouldReturnFocus={false}
-          applicationElement={() => document.getElementById('application') }
-          onDismiss={this.handleCancelPlannerItem}
+          onDismiss={this.handleCloseTray}
         >
+          <CloseButton placement="start" variant="icon" onClick={this.handleCloseTray}>
+            {formatMessage("Close")}
+          </CloseButton>
           <UpdateItemTray
             locale={this.props.locale}
             timeZone={this.props.timeZone}

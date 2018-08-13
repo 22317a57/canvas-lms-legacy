@@ -25,7 +25,6 @@ RSpec.describe AnonymousSubmissionsController do
     before do
       course_with_student_and_submitted_homework
       @context = @course
-      @course.root_account.enable_feature!(:anonymous_moderated_marking)
       @assignment.update!(anonymous_grading: true)
       @submission.update!(score: 10)
       @assignment.unmute!
@@ -65,7 +64,7 @@ RSpec.describe AnonymousSubmissionsController do
       @submission.mark_unread(@student)
       @submission.save!
       get :show, params: {course_id: @context.id, assignment_id: @assignment.id, anonymous_id: @submission.anonymous_id}, format: :json
-      expect(response).to be_success
+      expect(response).to be_successful
       submission = Submission.find(@submission.id)
       expect(submission.read?(@student)).to be_truthy
     end
@@ -77,7 +76,7 @@ RSpec.describe AnonymousSubmissionsController do
       @submission.mark_unread(@teacher)
       @submission.save!
       get :show, params: {course_id: @context.id, assignment_id: @assignment.id, anonymous_id: @submission.anonymous_id}, format: :json
-      expect(response).to be_success
+      expect(response).to be_successful
       submission = Submission.find(@submission.id)
       expect(submission.read?(@student)).to be_falsey
       expect(submission.read?(@teacher)).to be_falsey
@@ -119,7 +118,7 @@ RSpec.describe AnonymousSubmissionsController do
 
       get :show, params: {course_id: @context.id, assignment_id: @assignment.id, anonymous_id: @submission.anonymous_id}
 
-      expect(response).to be_success
+      expect(response).to be_successful
       expect(assigns[:visible_rubric_assessments]).to eq [@assessment]
     end
   end
